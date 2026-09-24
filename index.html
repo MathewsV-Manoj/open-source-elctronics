@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenCircuit Academy</title>
+  <meta name="description" content="A free, interactive path from basic electricity to Arduino, embedded systems and VLSI — with simulators, quizzes, projects and an automatic certificate.">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div id="readbar" class="readbar" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="logo" href="#/"><span class="logo-mark">⚡</span><span>Open<b>Circuit</b></span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="#/learn" data-r="/learn">Learn</a>
+      <a href="#/projects" data-r="/projects">Projects</a>
+      <a href="#/glossary" data-r="/glossary">Glossary</a>
+      <a href="#/certificate" data-r="/certificate">Certificate</a>
+    </nav>
+    <div class="top-actions">
+      <a id="ring" class="ring" href="#/learn" aria-label="Course progress"><span>0%</span></a>
+      <button id="theme" class="icon-btn" type="button" aria-label="Toggle light or dark theme">🌓</button>
+      <button id="menu" class="icon-btn menu-btn" type="button" aria-label="Open menu">☰</button>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1">
+    <noscript><p style="padding:2rem">OpenCircuit Academy needs JavaScript turned on for its simulators and quizzes.</p></noscript>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <b>⚡ OpenCircuit Academy</b>
+      <p>A free, open-source electronics course created by Mathews V Manoj (ECE, Muthoot Institute of Technology and Science) for every student who wants to understand how electronics really works.</p>
+    </div>
+    <div class="f-links">
+      <a href="#/learn">Learning path</a>
+      <a href="#/projects">Projects</a>
+      <a href="#/glossary">Glossary</a>
+      <a href="#/certificate">Certificate</a>
+      <a href="#" id="reset">Reset my progress</a>
+    </div>
+  </footer>
+
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/content/01-basics.js"></script>
+  <script src="assets/js/content/02-components.js"></script>
+  <script src="assets/js/content/03-circuits.js"></script>
+  <script src="assets/js/content/04-semiconductors.js"></script>
+  <script src="assets/js/content/05-digital.js"></script>
+  <script src="assets/js/content/06-arduino.js"></script>
+  <script src="assets/js/content/07-embedded.js"></script>
+  <script src="assets/js/content/08-vlsi.js"></script>
+  <script src="assets/js/content/projects.js"></script>
+  <script src="assets/js/widgets.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
