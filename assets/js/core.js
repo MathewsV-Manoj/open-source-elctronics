@@ -43,32 +43,32 @@ window.H = {
 
   // Everyday comparison that makes an idea click.
   analogy(html) {
-    return `<aside class="callout analogy"><div class="callout-title"><span class="lbl">Analogy</span>Think of it like this</div>${html}</aside>`;
+    return `<aside class="callout analogy"><div class="callout-title">Think of it like this</div>${html}</aside>`;
   },
 
   // The one thing to remember.
   key(html) {
-    return `<aside class="callout key"><div class="callout-title"><span class="lbl">Key idea</span>Remember this</div>${html}</aside>`;
+    return `<aside class="callout key"><div class="callout-title">Remember this</div>${html}</aside>`;
   },
 
   // A beginner trap.
   mistake(html) {
-    return `<aside class="callout mistake"><div class="callout-title"><span class="lbl">Watch out</span>Common beginner mistake</div>${html}</aside>`;
+    return `<aside class="callout mistake"><div class="callout-title">Watch out</div>${html}</aside>`;
   },
 
   // Link to the GATE ECE syllabus for students preparing for it.
   gate(html) {
-    return `<aside class="callout gate"><div class="callout-title"><span class="lbl">GATE</span>Exam corner</div>${html}</aside>`;
+    return `<aside class="callout gate"><div class="callout-title">For GATE</div>${html}</aside>`;
   },
 
   // Fun fact to keep curiosity going.
   fact(html) {
-    return `<aside class="callout fact"><div class="callout-title"><span class="lbl">Fact</span>Did you know?</div>${html}</aside>`;
+    return `<aside class="callout fact"><div class="callout-title">Did you know?</div>${html}</aside>`;
   },
 
   // Placeholder that widgets.js turns into an interactive simulator.
   widget(name, title) {
-    return `<section class="lab"><div class="lab-head"><span class="lab-badge">Live lab</span><h3>${title}</h3></div><div class="widget" data-widget="${name}"></div></section>`;
+    return `<section class="lab"><div class="lab-head"><span class="lab-badge">Try it</span><h3>${title}</h3></div><div class="widget" data-widget="${name}"></div></section>`;
   },
 
   // Small formula display.
