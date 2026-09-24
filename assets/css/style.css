@@ -482,6 +482,13 @@ button.bit:hover { border-color: var(--accent); }
 .vres.ok { color: var(--good); }
 .vres.bad { color: var(--bad); }
 
+.share-box { margin-top: 1.6rem; padding: 1.2rem 1.3rem; background: var(--surface2); border-radius: var(--radius); }
+.share-box h3 { margin: 0 0 .8rem; }
+.share-box textarea { width: 100%; margin: .4rem 0 .6rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: .92rem/1.5 var(--font); resize: vertical; }
+.share-box .copy-txt { font-size: .88rem; padding: .32rem .7rem; }
+.f-share { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin-top: 1rem; font-size: .92rem; }
+.f-share span { color: var(--muted); }
+
 /* ============ Footer ============ */
 .footer { margin-top: 4rem; border-top: 1px solid var(--line); background: var(--surface2); }
 .footer-inner { max-width: 980px; margin: 0 auto; padding: 2.4rem 16px 1.6rem; display: grid; grid-template-columns: 1.15fr 1.25fr .5fr; gap: 2rem 2.5rem; }

@@ -1,6 +1,10 @@
 (function () {
   const app = document.getElementById("app");
   const PASS = 0.8; // 4 of 5 questions
+  const SITE = "https://mathewsv-manoj.github.io/open-source-elctronics/";
+  const SITE_SHORT = "mathewsv-manoj.github.io/open-source-elctronics";
+  const COURSE_NAME = "Foundations of Electronics, Embedded Systems & VLSI";
+  const verifyUrl = (name, date, id) => `${SITE}#/verify/${id}/${date}/${encodeURIComponent(name)}`;
   const STORE = "opencircuit-progress-v1";
 
   /* ---------------- Progress (per-browser) ---------------- */
@@ -370,22 +374,23 @@
     return COURSE.map((m) => (state.quiz[m.id] && state.quiz[m.id].date) || "").sort().pop() || new Date().toISOString().slice(0, 10);
   }
 
-  function certificate() {
+  function certificate(verifyOnly = false) {
     const ok = allPassed();
     return `
-<section class="page-head narrow">
+${verifyOnly ? `<section class="page-head narrow"><h1>Verify a certificate</h1><p>This link checks an OpenCircuit Academy certificate. The result appears below.</p></section>` : `<section class="page-head narrow">
   <h1>Your certificate</h1>
   <p>Pass all ${COURSE.length} module quizzes (80% or more) and your certificate of completion is generated automatically, with a unique ID anyone can verify.</p>
-</section>
+</section>`}
 <div class="narrow">
-  ${ok ? `
+  ${verifyOnly ? "" : ok ? `
   <div class="cert-form">
     <label class="ctl num"><span>Your full name, as it should appear</span><input id="cname" type="text" maxlength="48" value="${H.esc(state.name || "")}" placeholder="e.g. Mathews V Manoj"></label>
     <button class="btn primary" id="cgen">Generate certificate</button>
   </div>
   <div class="cert-view" id="cview" hidden><canvas id="cert" width="1600" height="1130"></canvas>
-    <div class="btn-row center"><button class="btn primary" id="cdl">⬇ Download PNG</button><button class="btn ghost" id="cprint" ${window.claude ? "hidden" : ""}>🖨 Print / save as PDF</button></div>
+    <div class="btn-row center"><button class="btn primary" id="cdl">Download PNG</button><button class="btn ghost" id="cprint" ${window.claude ? "hidden" : ""}>Print or save as PDF</button></div>
     <p class="muted small center" id="cmsg"></p>
+    <div class="share-box" id="cshare"></div>
   </div>` : `
   <div class="locked">
     <h2>Pass these module quizzes to unlock it</h2>
@@ -440,7 +445,7 @@
     ctx.fillStyle = "#cbd5e1"; ctx.font = "28px system-ui, sans-serif";
     ctx.fillText("has successfully completed all modules and assessments of", W / 2, 535);
     ctx.fillStyle = "#ffffff"; ctx.font = "600 38px system-ui, sans-serif";
-    ctx.fillText("Foundations of Electronics, Embedded Systems & VLSI", W / 2, 590);
+    ctx.fillText(COURSE_NAME, W / 2, 590);
     ctx.fillStyle = "#94a3b8"; ctx.font = "22px system-ui, sans-serif";
     const titles = COURSE.map((m) => m.title.replace(/:.*/, ""));
     const half = Math.ceil(titles.length / 2);
@@ -463,11 +468,43 @@
     for (let k = 0; k < 40; k++) { const r = k % 2 ? 78 : 90, a = (k / 40) * Math.PI * 2; ctx.lineTo(sx + r * Math.cos(a), sy + r * Math.sin(a)); }
     ctx.fill();
     ctx.fillStyle = "#07231a"; ctx.beginPath(); ctx.arc(sx, sy, 64, 0, 7); ctx.fill();
-    ctx.fillStyle = "#f0a36b"; ctx.font = "700 44px system-ui"; ctx.fillText("⚡", sx, sy + 4);
+    ctx.strokeStyle = "#f0a36b"; ctx.lineWidth = 5; ctx.lineJoin = "round"; ctx.beginPath(); ctx.moveTo(sx - 40, sy - 6); ctx.lineTo(sx - 24, sy - 6); ctx.lineTo(sx - 16, sy - 26); ctx.lineTo(sx - 4, sy + 14); ctx.lineTo(sx + 8, sy - 26); ctx.lineTo(sx + 20, sy + 14); ctx.lineTo(sx + 26, sy - 6); ctx.lineTo(sx + 40, sy - 6); ctx.stroke();
+    ctx.fillStyle = "#f0a36b";
     ctx.font = "700 16px system-ui"; ctx.fillText("VERIFIED", sx, sy + 34);
-    ctx.fillStyle = "#64748b"; ctx.font = "18px system-ui";
-    ctx.fillText("Verify this certificate on the OpenCircuit Academy certificate page using the name, date and ID above.", W / 2, Hh - 80);
+    ctx.fillStyle = "#94a3b8"; ctx.font = "20px system-ui";
+    ctx.fillText(`Verify at ${SITE_SHORT}  ·  Course by Mathews V Manoj`, W / 2, Hh - 80);
     return id;
+  }
+
+  // Sharing options shown under a generated certificate.
+  function renderShare(name, date, id) {
+    const [y, mo] = date.split("-");
+    const vurl = verifyUrl(name, date, id);
+    const addToProfile = "https://www.linkedin.com/profile/add?" + new URLSearchParams({
+      startTask: "CERTIFICATION_NAME", name: COURSE_NAME, organizationName: "OpenCircuit Academy",
+      issueYear: y, issueMonth: String(+mo), certId: id, certUrl: vurl,
+    });
+    const post = `I just completed "${COURSE_NAME}" on OpenCircuit Academy, a free interactive electronics course by Mathews V Manoj. It covers basics to Arduino, ESP32, Raspberry Pi, embedded systems and VLSI.\n\nCertificate ID: ${id}\nVerify: ${vurl}\n\nTry it free: ${SITE}\n\n#electronics #arduino #embeddedsystems #ECE`;
+    document.getElementById("cshare").innerHTML = `
+      <h3>Share your achievement</h3>
+      <div class="btn-row">
+        <a class="btn linkedin" href="${addToProfile}" target="_blank" rel="noopener">Add to LinkedIn profile</a>
+        <a class="btn ghost" href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SITE)}" target="_blank" rel="noopener">Share on LinkedIn</a>
+        <a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent(post)}" target="_blank" rel="noopener">Share on WhatsApp</a>
+      </div>
+      <p class="muted small">Suggested post. Copy it, then attach your downloaded certificate image.</p>
+      <textarea id="cpost" readonly rows="7">${H.esc(post)}</textarea>
+      <div class="btn-row"><button class="btn ghost small copy-txt" type="button" data-copy="${H.esc(post)}">Copy post</button><button class="btn ghost small copy-txt" type="button" data-copy="${H.esc(vurl)}">Copy verify link</button></div>`;
+  }
+
+  // Open a shared verify link: #/verify/<id>/<date>/<name>
+  function prefillVerify(parts) {
+    const [, id, date, ...rest] = parts;
+    document.getElementById("vname").value = decodeURIComponent(rest.join("/"));
+    document.getElementById("vdate").value = date || "";
+    document.getElementById("vid").value = id || "";
+    document.getElementById("vbtn").click();
+    document.querySelector(".verify").scrollIntoView({ block: "center" });
   }
 
   function wireCertificate() {
@@ -497,6 +534,7 @@
           a.click();
         };
         document.getElementById("cprint").onclick = () => window.print();
+        renderShare(name, completionDate(), id);
         confetti();
       };
       gen.addEventListener("click", run);
@@ -561,6 +599,7 @@
       });
     }
     else if (parts[0] === "certificate") { html = certificate(); after = wireCertificate; title = "Certificate"; }
+    else if (parts[0] === "verify") { html = certificate(true); after = () => { wireCertificate(); prefillVerify(parts); }; title = "Verify a certificate"; }
     else html = notFound();
 
     app.innerHTML = html;
@@ -579,7 +618,8 @@
     if (done) { state.lessons[done.dataset.complete] = true; save(); }
     const ct = e.target.closest(".copy-txt");
     if (ct) {
-      const done = () => { ct.textContent = "Copied"; setTimeout(() => (ct.textContent = "Copy"), 1400); };
+      const label = ct.dataset.label || (ct.dataset.label = ct.textContent);
+      const done = () => { ct.textContent = "Copied"; setTimeout(() => (ct.textContent = label), 1400); };
       if (navigator.clipboard) navigator.clipboard.writeText(ct.dataset.copy).then(done, () => {});
     }
     const copy = e.target.closest(".copy");
