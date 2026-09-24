@@ -876,7 +876,7 @@ meas ac fc WHEN vdb(out)=-3
     cost: "Free",
     learn: ["Transient (time-domain) simulation", "Diode models", "Measuring ripple automatically"],
     parts: ["ngspice (free) — or LTspice"],
-    how: `<p>This simulates the lab rectifier safely on your computer: a 12 V RMS (17 V peak) 50 Hz source, a four-diode bridge, a 2200 µF filter and a 100 Ω load. Expect an output near 15.5 V with roughly 0.7 V of ripple, matching V<sub>r</sub> ≈ I ÷ (2 f C).</p>`,
+    how: `<p>This simulates the lab rectifier safely on your computer: a 12 V RMS (17 V peak) 50 Hz source, a four-diode bridge, a 2200 µF filter and a 100 Ω load. Expect an output of about 15 V with roughly 0.6 V of ripple, close to the estimate V<sub>r</sub> ≈ I ÷ (2 f C) ≈ 0.7 V.</p>`,
     steps: [
       "Save as <code>bridge.cir</code> and run <code>ngspice bridge.cir</code>.",
       "The plot shows the AC input and the smoothed DC output; the maximum, minimum and ripple are printed.",
