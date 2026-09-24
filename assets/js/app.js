@@ -308,7 +308,8 @@
     <button class="btn primary" id="cgen">Generate certificate</button>
   </div>
   <div class="cert-view" id="cview" hidden><canvas id="cert" width="1600" height="1130"></canvas>
-    <div class="btn-row center"><button class="btn primary" id="cdl">⬇ Download PNG</button><button class="btn ghost" id="cprint">🖨 Print / save as PDF</button></div>
+    <div class="btn-row center"><button class="btn primary" id="cdl">⬇ Download PNG</button><button class="btn ghost" id="cprint" ${window.claude ? "hidden" : ""}>🖨 Print / save as PDF</button></div>
+    <p class="muted small center" id="cmsg"></p>
   </div>` : `
   <div class="locked">
     <div class="big-emoji">🔒</div>
@@ -402,10 +403,21 @@
         state.name = name; save();
         document.getElementById("cview").hidden = false;
         const id = drawCert(name);
-        document.getElementById("cdl").onclick = () => {
+        document.getElementById("cdl").onclick = async () => {
+          const filename = `OpenCircuit-Certificate-${id}.png`;
+          const canvas = document.getElementById("cert");
+          const msg = document.getElementById("cmsg");
+          // Inside the claude.ai viewer, files are offered through the downloads capability.
+          const downloads = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
+          if (downloads) {
+            const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+            try { await downloads.save({ filename, data: blob }); msg.textContent = "Certificate saved."; }
+            catch (err) { msg.textContent = err && err.code === "declined" ? "" : "Saving isn't available here. Right-click or long-press the certificate to save the image."; }
+            return;
+          }
           const a = document.createElement("a");
-          a.download = `OpenCircuit-Certificate-${id}.png`;
-          a.href = document.getElementById("cert").toDataURL("image/png");
+          a.download = filename;
+          a.href = canvas.toDataURL("image/png");
           a.click();
         };
         document.getElementById("cprint").onclick = () => window.print();
@@ -533,11 +545,20 @@
   });
   document.getElementById("menu").addEventListener("click", () => document.body.classList.toggle("nav-open"));
 
-  document.getElementById("reset").addEventListener("click", (e) => {
+  // Two-step reset: the first click asks, the second (within 4 s) confirms.
+  const resetLink = document.getElementById("reset");
+  let resetArmed = null;
+  resetLink.addEventListener("click", (e) => {
     e.preventDefault();
-    if (confirm("Reset all your progress, quiz scores and certificate name on this device?")) {
-      state = { lessons: {}, quiz: {}, name: "" }; save(); render();
+    if (!resetArmed) {
+      resetLink.textContent = "Click again to erase all progress";
+      resetArmed = setTimeout(() => { resetArmed = null; resetLink.textContent = "Reset my progress"; }, 4000);
+      return;
     }
+    clearTimeout(resetArmed); resetArmed = null;
+    state = { lessons: {}, quiz: {}, name: "" }; save(); render();
+    resetLink.textContent = "Progress reset";
+    setTimeout(() => (resetLink.textContent = "Reset my progress"), 2000);
   });
 
   window.addEventListener("hashchange", render);
