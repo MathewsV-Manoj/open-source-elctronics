@@ -2,7 +2,7 @@
 
 Ready-to-use messages and one-time setup steps for promoting OpenCircuit Academy.
 
-Site: https://mathewsv-manoj.github.io/open-source-elctronics/
+Site: https://mathewsv-manoj.github.io/open-source-electronics-try-/
 
 ---
 
@@ -11,10 +11,10 @@ Site: https://mathewsv-manoj.github.io/open-source-elctronics/
 ### Repository details
 On the repo's main page, click the gear icon next to **About**:
 - **Description:** `Free interactive electronics course: basics to Arduino, ESP32, Raspberry Pi, embedded systems and VLSI.`
-- **Website:** `https://mathewsv-manoj.github.io/open-source-elctronics/`
+- **Website:** `https://mathewsv-manoj.github.io/open-source-electronics-try-/`
 - **Topics:** `electronics` `arduino` `esp32` `raspberry-pi` `embedded-systems` `vlsi` `education` `gate-exam` `iot` `learning`
 
-Optional: rename the repo to `opencircuit` in **Settings → General**. The current name has a typo ("elctronics"). GitHub redirects old links, but the site address would change, so if you rename, tell Claude so the links in the site are updated too.
+If you rename the repo again (for example to `opencircuit`), the site address changes too. Tell Claude so the links inside the site, the certificate and the preview image are updated.
 
 ### Visitor counter (GoatCounter, free, no cookies)
 1. Sign up at https://www.goatcounter.com/signup
@@ -22,7 +22,7 @@ Optional: rename the repo to `opencircuit` in **Settings → General**. The curr
 3. If `opencircuit` is taken, choose another code and ask Claude to update it in `index.html`.
 
 ### Google Search Console
-1. Go to https://search.google.com/search-console and add the property **URL prefix**: `https://mathewsv-manoj.github.io/open-source-elctronics/`
+1. Go to https://search.google.com/search-console and add the property **URL prefix**: `https://mathewsv-manoj.github.io/open-source-electronics-try-/`
 2. Choose the **HTML tag** method. Send the `<meta name="google-site-verification" …>` tag to Claude to add, then press **Verify**.
 3. Under **Sitemaps**, submit `sitemap.xml`.
 
@@ -47,7 +47,7 @@ Attach a 30–45 second screen recording: the home page, a simulator being used 
 >
 > No sign-up, no ads, completely free and open source.
 >
-> 👉 https://mathewsv-manoj.github.io/open-source-elctronics/
+> 👉 https://mathewsv-manoj.github.io/open-source-electronics-try-/
 >
 > I'd love feedback, especially from juniors just starting out. And if it helps you, share it with someone who needs it.
 >
@@ -60,7 +60,7 @@ Tag: Muthoot Institute of Technology and Science, IEEE Kerala Section, and your 
 ## 3. WhatsApp message (class and college groups)
 
 > Hi all! I built a free electronics course website: basics → Arduino → ESP32 → Raspberry Pi → embedded → VLSI, with simulators, 23 projects and a certificate at the end. It's useful for KTU subjects and GATE too.
-> https://mathewsv-manoj.github.io/open-source-elctronics/
+> https://mathewsv-manoj.github.io/open-source-electronics-try-/
 > Feedback welcome 🙂
 
 ---
@@ -69,7 +69,7 @@ Tag: Muthoot Institute of Technology and Science, IEEE Kerala Section, and your 
 
 > Dear Sir/Madam,
 >
-> I have built a free, open-source electronics learning website for students: https://mathewsv-manoj.github.io/open-source-elctronics/
+> I have built a free, open-source electronics learning website for students: https://mathewsv-manoj.github.io/open-source-electronics-try-/
 >
 > It covers circuit basics, semiconductors, digital electronics, Arduino, embedded systems, ESP32/Raspberry Pi and an introduction to VLSI, with interactive simulators, quizzes and 23 hands-on projects. I would be grateful if you could review it, and if you find it useful, recommend it to first- and second-year students. I would also be happy to conduct a free hands-on Arduino workshop using it.
 >
@@ -86,8 +86,8 @@ Read each community's self-promotion rules first. Post as a request for feedback
 
 > It goes from voltage/current basics through transistors, logic, Arduino, registers/interrupts/UART-I²C-SPI, ESP32 and Raspberry Pi, to an intro to CMOS and Verilog. There are 18 small simulators (logic gates, PWM, ADC, UART frame, CMOS inverter…) and 23 projects with code. It's static HTML/JS, open source, with no sign-up.
 >
-> Site: https://mathewsv-manoj.github.io/open-source-elctronics/
-> Code: https://github.com/MathewsV-Manoj/open-source-elctronics
+> Site: https://mathewsv-manoj.github.io/open-source-electronics-try-/
+> Code: https://github.com/MathewsV-Manoj/open-source-electronics-try-
 >
 > I'd especially like to hear where the explanations are unclear or wrong.
 

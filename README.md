@@ -2,7 +2,7 @@
 
 **A free, interactive electronics course: from "what is voltage?" to Arduino, ESP32, Raspberry Pi, embedded systems and VLSI.**
 
-**[Open the course →](https://mathewsv-manoj.github.io/open-source-elctronics/)**
+**[Open the course →](https://mathewsv-manoj.github.io/open-source-electronics-try-/)**
 
 ![OpenCircuit Academy home page](docs/screenshots/home.png)
 

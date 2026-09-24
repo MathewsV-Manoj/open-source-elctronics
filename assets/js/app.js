@@ -1,8 +1,8 @@
 (function () {
   const app = document.getElementById("app");
   const PASS = 0.8; // 4 of 5 questions
-  const SITE = "https://mathewsv-manoj.github.io/open-source-elctronics/";
-  const SITE_SHORT = "mathewsv-manoj.github.io/open-source-elctronics";
+  const SITE = "https://mathewsv-manoj.github.io/open-source-electronics-try-/";
+  const SITE_SHORT = "mathewsv-manoj.github.io/open-source-electronics-try-";
   const COURSE_NAME = "Foundations of Electronics, Embedded Systems & VLSI";
   const verifyUrl = (name, date, id) => `${SITE}#/verify/${id}/${date}/${encodeURIComponent(name)}`;
   const STORE = "opencircuit-progress-v1";
