@@ -1,6 +1,6 @@
 # OpenCircuit Academy
 
-**A free, interactive electronics course: from "what is voltage?" to Arduino, ESP32, Raspberry Pi, embedded systems and VLSI.**
+**A free, interactive electronics course: from the electron to the industry, across analog, digital, embedded, VLSI, communication and power electronics.**
 
 **[Open the course →](https://mathewsv-manoj.github.io/open-source-electronics-try-/)**
 
@@ -10,34 +10,31 @@ Every idea is explained in plain words with an everyday comparison. Small simula
 
 ## What's inside
 
-| # | Module | Highlights |
-|---|--------|-----------|
-| 1 | The Spark: What Is Electricity? | Water-tank analogy, Ohm's law, power, AC/DC, safety |
-| 2 | Meet the Components | Resistor colour code, capacitors & RC, inductors, diodes/LEDs, breadboard & multimeter |
-| 3 | Building Circuits | Series/parallel, voltage divider, Kirchhoff's laws, schematic symbols |
-| 4 | Semiconductors & Transistors | Doping, PN junction, BJT switch, MOSFET, op-amps |
-| 5 | Digital Electronics | Binary/hex, logic gates, half adder, flip-flops & clocks |
-| 6 | Arduino | Board tour, Blink, buttons, ADC, PWM, Serial |
-| 7 | Embedded Systems | Registers & bit manipulation, interrupts, timers, UART/I²C/SPI, RTOS |
-| 8 | VLSI | CMOS, chip design flow, fabrication, first Verilog |
-| 9 | Beyond Arduino: ESP32 & Raspberry Pi | Choosing a board, ESP32 Wi-Fi and web server, Pico with MicroPython, Raspberry Pi with Python |
+The course is organised into **8 branches of electronics**. Each one goes from beginner to advanced and ends with how that field works in industry: typical roles and the tools engineers use.
 
-- **18 simulators**, including Ohm's law, the resistor colour code, an RC charging curve, logic gates, PWM, the ADC, register bits, a UART frame, a CMOS inverter and a board picker.
-- **An "In short" summary and a recap** for every lesson, and a quiz with explained answers for every module.
-- **"For GATE" notes** linking topics to the GATE ECE syllabus.
-- **A searchable glossary.**
+| # | Branch | Modules |
+|---|--------|---------|
+| 1 | Foundations | What is electricity? · Components · Building circuits |
+| 2 | Analog Electronics | Semiconductors & transistors · Power supplies, amplifiers, filters, oscillators |
+| 3 | Digital Electronics | Binary & logic · Counters, state machines, memory, ADC/DAC, FPGAs |
+| 4 | Embedded Systems | Arduino · Registers, interrupts, UART/I²C/SPI, RTOS · ESP32 & Raspberry Pi |
+| 5 | VLSI & Chip Design | CMOS & first Verilog · RTL rules, timing, verification, physical design |
+| 6 | Communication Systems | Signals, noise, AM/FM · Sampling, PCM, digital modulation, coding · Antennas, link budgets, 5G, satellites, radar |
+| 7 | Power Electronics | Switching converters, inverters, motor drives, EVs, solar |
+| 8 | Industry & Careers | Product lifecycle, PCB design, testing & certification, careers roadmap |
+
+17 modules and 74 lessons in all, with 22 simulators, a summary and recap for every lesson, a quiz for every module, "For GATE" notes, and a searchable glossary.
 
 ![A logic gate simulator inside a lesson](docs/screenshots/simulator.png)
 
-## 23 hands-on projects
+## 43 projects in four categories
 
-Filter by platform and level. Each project has a "how it works" explanation, a parts checklist with prices, build steps, code and a challenge.
+Every project includes the parts, connections and code (or the lab procedure), plus a challenge.
 
-- **No microcontroller:** 555 flasher, dark-activated light
-- **Arduino:** traffic light, reaction timer, night lamp, Morse transmitter, distance meter, weather monitor, laser tripwire, plant watering, MPU6050 tilt sensor, line follower, mini radar
-- **ESP32:** Wi-Fi dimmer, Bluetooth remote, IoT weather dashboard, GPS tracker, deep-sleep sensor node
-- **Raspberry Pi Pico:** breathing LED, temperature logger (MicroPython)
-- **Raspberry Pi:** Flask control panel, motion camera, OpenCV face detection
+- **Microcontroller (21):** Arduino, ESP32, Raspberry Pi Pico and Raspberry Pi — from a traffic light to face detection
+- **VLSI (5):** Verilog ALU, traffic-light FSM, UART transmitter, PWM generator, 7-segment counter — each with a self-checking testbench
+- **Simulation (7):** AM, FFT spectrum analyser, BPSK bit error rate, 16-QAM, FIR filter (Python); RC filter and bridge rectifier (SPICE)
+- **Lab (10):** rectifiers, Zener regulator, clippers and clampers, CE amplifier, op-amp amplifiers, RC oscillator, logic ICs, decade counter, 555 flasher, dark sensor
 
 ![The projects page](docs/screenshots/projects.png)
 
@@ -72,8 +69,9 @@ In **Settings → Pages**, choose **Deploy from a branch**, select the branch an
 - Lessons live in `assets/js/content/NN-*.js`. Each file adds one module (lessons + quiz) to `COURSE`.
 - Helpers in `assets/js/core.js` (`H.analogy`, `H.key`, `H.mistake`, `H.gate`, `H.fact`, `H.code`, `H.widget`, `H.formula`, `H.table`, `H.steps`) keep lesson markup short.
 - Simulators are in `assets/js/widgets.js`. Place one in a lesson with `H.widget("name", "Title")`.
-- Lesson summaries and recaps are in `assets/js/content/recaps.js`.
-- Projects and glossary terms are in `assets/js/content/projects.js`.
+- Branches (and their industry notes) are in `assets/js/content/tracks.js`.
+- Lesson summaries and recaps are in `assets/js/content/recaps.js` and `recaps-more.js`.
+- Projects are in `assets/js/content/projects.js` (microcontroller) and `projects-more.js` (lab, VLSI, simulation); the glossary is in `projects.js`.
 - The link-preview image is `assets/og-image.png` (1200 × 630).
 
 Found a mistake or want to add a lesson or project? Open an issue or a pull request.

@@ -139,12 +139,62 @@ main { outline: none; min-height: 60vh; }
 .how h3 { margin: 0 0 .25rem; font-size: 1.02rem; }
 .how p { margin: 0; color: var(--muted); font-size: .96rem; }
 
+/* Branch cards (home) */
+.branch-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 2rem; margin-top: .4rem; }
+.branch { display: grid; grid-template-columns: 2.2rem 1fr; gap: .15rem .8rem; padding: 1rem .2rem; border-bottom: 1px solid var(--line); color: var(--fg); }
+.branch:hover { text-decoration: none; background: var(--surface2); }
+.branch .n { grid-row: span 3; font: 500 .9rem var(--mono); color: var(--muted); padding-top: .15rem; }
+.branch b { font: 600 1.1rem var(--head); }
+.branch .d { color: var(--muted); font-size: .95rem; }
+.branch .meta { font-size: .84rem; color: var(--muted); }
+.branch .prog { grid-column: 2; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: .3rem; }
+.branch .prog i { display: block; height: 100%; background: var(--accent); }
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: .6rem; }
+.cat-card { display: flex; flex-direction: column; gap: .2rem; padding: 1rem 1.1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--fg); }
+.cat-card:hover { border-color: var(--accent); text-decoration: none; }
+.cat-card b { font: 600 1.05rem var(--head); }
+.cat-card .n { font-size: .85rem; color: var(--accent); font-weight: 600; }
+.cat-card span:last-child { font-size: .9rem; color: var(--muted); }
+
+/* Learn page: branches with their modules */
+.tracks { max-width: 980px; margin: 0 auto; padding: 0 16px 3rem; }
+.track-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1rem 2.4rem; padding: 1.4rem 0; border-top: 1px solid var(--line); }
+.track-head { display: grid; grid-template-columns: 2.2rem 1fr; gap: .8rem; }
+.track-head .n { font: 500 .9rem var(--mono); color: var(--muted); padding-top: .3rem; }
+.track-head h2 { margin: 0 0 .25rem; font-size: 1.25rem; }
+.track-head h2 a { color: var(--fg); }
+.track-head p { margin: 0; color: var(--muted); font-size: .95rem; }
+.track-mods { list-style: none; padding: 0; margin: 0; }
+.track-mods a { display: flex; align-items: center; gap: .6rem; padding: .45rem .2rem; color: var(--fg); border-bottom: 1px solid var(--line); }
+.track-mods li:last-child a { border-bottom: 0; }
+.track-mods a:hover { color: var(--accent); text-decoration: none; }
+.track-mods .t { flex: 1; }
+.lvl { font-size: .78rem; color: var(--muted); white-space: nowrap; }
+.track-mods small { color: var(--muted); font-size: .82rem; min-width: 2.2rem; text-align: right; }
+
+/* Branch page */
+.track-page { padding: 0 16px 3rem; }
+.uses { columns: 2; column-gap: 2rem; padding-left: 1.1rem; }
+.path { list-style: none; padding: 0; margin: 1rem 0 1.4rem; }
+.path > li { display: grid; grid-template-columns: 2.2rem 1fr; gap: 1rem; padding: 1rem 0; border-top: 1px solid var(--line); }
+.path .step { width: 2rem; height: 2rem; border-radius: 50%; background: var(--surface2); display: grid; place-items: center; font: 600 .9rem var(--mono); }
+.path > li.done .step { background: var(--good); color: #fff; }
+.path b { font: 600 1.08rem var(--head); color: var(--fg); }
+.path p { margin: .2rem 0 .4rem; color: var(--muted); font-size: .95rem; }
+.path-lessons { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.path-lessons a { display: flex; gap: .5rem; align-items: flex-start; padding: .2rem 0; font-size: .93rem; color: var(--fg); }
+.industry { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 2rem; }
+.industry h3 { margin: 0 0 .3rem; font-size: 1rem; }
+.industry ul { padding-left: 1.1rem; margin: 0; }
+.proj-grid.inline { padding: 0; max-width: none; }
+.track-nav { display: flex; justify-content: space-between; margin-top: 2.4rem; padding-top: 1rem; border-top: 1px solid var(--line); font-weight: 600; }
+
 /* ============ Page heads & curriculum ============ */
 .page-head { max-width: 980px; margin: 0 auto; padding: 2.4rem 16px 1rem; }
 .page-head h1 { margin-bottom: .3rem; }
 .page-head p { color: var(--muted); max-width: 66ch; }
 .page-head.narrow { max-width: 780px; }
-.crumb { display: inline-block; font-size: .92rem; margin-bottom: .5rem; color: var(--muted); }
+.crumb { display: block; width: fit-content; font-size: .92rem; margin-bottom: .5rem; color: var(--muted); }
 .bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin: 1rem 0 .4rem; max-width: 420px; }
 .bar div { height: 100%; background: var(--accent); transition: width .5s; }
 .modules { max-width: 980px; margin: 0 auto; padding: 0 16px 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem 2.4rem; }
@@ -418,6 +468,13 @@ button.bit:hover { border-color: var(--accent); }
 .big-emoji { font-size: 2.2rem; }
 
 /* ============ Projects ============ */
+.cat-tabs { max-width: 980px; margin: 0 auto; padding: 0 16px; display: flex; gap: .2rem; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.cat-tabs button { border: 0; background: none; padding: .6rem .9rem; font: 600 1rem var(--font); color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.cat-tabs button small { font-weight: 500; opacity: .8; }
+.cat-tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
+.cat-desc { max-width: 980px; margin: .9rem auto .6rem; padding: 0 16px; color: var(--muted); }
+.tags { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.cat-tag { font-size: .78rem; color: var(--muted); }
 .filters { max-width: 980px; margin: 0 auto; padding: 0 16px 1.2rem; display: grid; gap: .5rem; }
 .filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .filter-row > span { font-size: .9rem; color: var(--muted); width: 72px; }
@@ -491,13 +548,13 @@ button.bit:hover { border-color: var(--accent); }
 
 /* ============ Footer ============ */
 .footer { margin-top: 4rem; border-top: 1px solid var(--line); background: var(--surface2); }
-.footer-inner { max-width: 980px; margin: 0 auto; padding: 2.4rem 16px 1.6rem; display: grid; grid-template-columns: 1.15fr 1.25fr .5fr; gap: 2rem 2.5rem; }
+.footer-inner { max-width: 980px; margin: 0 auto; padding: 2.4rem 16px 1.6rem; display: grid; grid-template-columns: 1fr 1.4fr .5fr; gap: 2rem 2.5rem; }
 .f-title { font: 600 1.05rem var(--head); margin: 0 0 .5rem; color: var(--fg); }
 .footer p { color: var(--muted); font-size: .96rem; }
 .about .role { margin: -.2rem 0 .6rem; font-size: .92rem; color: var(--fg); }
 .contact ul { list-style: none; padding: 0; margin: .9rem 0 0; }
 .contact li { display: flex; align-items: center; gap: .5rem; padding: .3rem 0; flex-wrap: wrap; font-size: .96rem; }
-.contact li > span:first-child { width: 4.5rem; color: var(--muted); font-size: .88rem; }
+.contact li > span:first-child { width: 5.4rem; color: var(--muted); font-size: .88rem; }
 .contact a { color: var(--fg); font-weight: 600; }
 .copy-txt { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 4px; font: 500 .74rem var(--font); padding: .08rem .45rem; cursor: pointer; }
 .copy-txt:hover { color: var(--fg); }
@@ -532,6 +589,8 @@ button.bit:hover { border-color: var(--accent); }
   .footer-inner { grid-template-columns: 1fr 1fr; }
   .about { grid-column: 1 / -1; }
   .feature-projects, .how { grid-template-columns: 1fr 1fr; }
+  .cat-grid { grid-template-columns: 1fr 1fr; }
+  .track-row { grid-template-columns: 1fr; }
 }
 @media (max-width: 680px) {
   body { font-size: 16.5px; }
@@ -542,6 +601,10 @@ button.bit:hover { border-color: var(--accent); }
   .mod-list a { grid-template-columns: 2rem 1fr; }
   .mod-list .s { grid-column: 2; grid-row: auto; }
   .feature-projects, .how { grid-template-columns: 1fr; }
+  .branch-grid, .cat-grid, .industry, .path-lessons { grid-template-columns: 1fr; }
+  .uses { columns: 1; }
+  .track-mods .lvl { display: none; }
+  .track-head { grid-template-columns: 1.8rem 1fr; }
   .footer-inner { grid-template-columns: 1fr; }
   .trio, .compare, .w-grid, .w-grid.three { grid-template-columns: 1fr; }
   .colorcode { grid-template-columns: repeat(2, 1fr); }

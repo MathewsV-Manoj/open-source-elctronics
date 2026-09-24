@@ -681,6 +681,164 @@
     update();
   };
 
+  /* ---------- Shared plotting helper for the waveform widgets ---------- */
+  // traces: [{ f: x => y (x in [0,1], y in [-1,1]), color, width, dash, points }]
+  function plotWaves(cv, traces, opts = {}) {
+    const { ctx, w, h } = setupCanvas(cv);
+    const pad = 8, mid = h / 2, amp = (h / 2 - pad) * (opts.scale || 0.9);
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke();
+    traces.forEach((t) => {
+      ctx.strokeStyle = t.color; ctx.lineWidth = t.width || 2; ctx.setLineDash(t.dash || []);
+      if (t.points) {
+        ctx.fillStyle = t.color;
+        t.points.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x * w, mid - y * amp, 4, 0, 7); ctx.fill(); });
+      }
+      if (t.f) {
+        ctx.beginPath();
+        for (let px = 0; px <= w; px++) { const y = mid - t.f(px / w) * amp; px ? ctx.lineTo(px, y) : ctx.moveTo(px, y); }
+        ctx.stroke();
+      }
+    });
+    ctx.setLineDash([]);
+  }
+
+  /* ---------- RC low-pass frequency response ---------- */
+  W.rcfilter = (el) => {
+    const p = idp();
+    el.innerHTML = `
+      <div class="w-grid">
+        ${slider(p + "r", "Resistance R", 100, 100000, 100, 10000)}
+        ${slider(p + "c", "Capacitance C (nF)", 1, 1000, 1, 100)}
+      </div>
+      <canvas class="plot" id="${p}cv" aria-label="Gain in dB against frequency"></canvas>
+      <div class="readout"><div><small>Cut-off f<sub>c</sub></small><b id="${p}fc"></b></div><div><small>Gain at 10 × f<sub>c</sub></small><b>−20 dB</b></div></div>`;
+    const cv = $(el, "#" + p + "cv");
+    const draw = () => {
+      const R = +$(el, "#" + p + "r").value, C = +$(el, "#" + p + "c").value * 1e-9;
+      $(el, "#" + p + "r-o").textContent = fmt(R, "Ω");
+      $(el, "#" + p + "c-o").textContent = fmt(C, "F");
+      const fc = 1 / (2 * Math.PI * R * C);
+      $(el, "#" + p + "fc").textContent = fmt(fc, "Hz");
+      const { ctx, w, h } = setupCanvas(cv);
+      const pad = 36, pw = w - pad - 10, ph = h - 30, f0 = 1, f1 = 1e6, dbMin = -60;
+      const X = (f) => pad + (Math.log10(f / f0) / Math.log10(f1 / f0)) * pw;
+      const Y = (db) => 8 + (db / dbMin) * (ph - 8);
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = "11px system-ui"; ctx.fillStyle = css("--muted"); ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+      [1, 10, 100, 1e3, 1e4, 1e5, 1e6].forEach((f) => { const x = X(f); ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, ph); ctx.stroke(); ctx.fillText(fmt(f, "Hz").replace(" ", ""), x - 12, h - 8); });
+      [0, -20, -40, -60].forEach((db) => { const y = Y(db); ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(pad + pw, y); ctx.stroke(); ctx.fillText(db + " dB", 0, y + 4); });
+      if (fc >= f0 && fc <= f1) { ctx.setLineDash([4, 4]); ctx.strokeStyle = css("--signal"); ctx.beginPath(); ctx.moveTo(X(fc), 8); ctx.lineTo(X(fc), ph); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = css("--signal"); ctx.fillText("fc", X(fc) + 4, 20); }
+      ctx.strokeStyle = css("--accent"); ctx.lineWidth = 2.5; ctx.beginPath();
+      for (let px = 0; px <= pw; px++) { const f = f0 * Math.pow(f1 / f0, px / pw); const db = Math.max(dbMin, -10 * Math.log10(1 + (f / fc) ** 2)); px ? ctx.lineTo(pad + px, Y(db)) : ctx.moveTo(pad + px, Y(db)); }
+      ctx.stroke();
+    };
+    bind(el, [p + "r", p + "c"], draw);
+    window.addEventListener("resize", () => el.isConnected && draw());
+  };
+
+  /* ---------- AM modulation ---------- */
+  W.am = (el) => {
+    const p = idp();
+    el.innerHTML = `
+      <div class="w-grid">
+        ${slider(p + "mu", "Modulation index μ", 0, 1.5, 0.05, 0.6)}
+        ${slider(p + "fc", "Carrier / message frequency ratio", 5, 40, 1, 20)}
+      </div>
+      <canvas class="plot" id="${p}cv" aria-label="AM waveform with its envelope"></canvas>
+      <p class="w-note" id="${p}note"></p>`;
+    const cv = $(el, "#" + p + "cv");
+    const draw = () => {
+      const mu = +$(el, "#" + p + "mu").value, k = +$(el, "#" + p + "fc").value;
+      $(el, "#" + p + "mu-o").textContent = mu.toFixed(2);
+      $(el, "#" + p + "fc-o").textContent = k + " : 1";
+      const cycles = 2, m = (x) => Math.sin(2 * Math.PI * cycles * x);
+      const s = 1 / (1 + Math.max(1, mu));
+      plotWaves(cv, [
+        { f: (x) => s * (1 + mu * m(x)) * Math.cos(2 * Math.PI * cycles * k * x), color: css("--accent"), width: 1.5 },
+        { f: (x) => s * (1 + mu * m(x)), color: css("--signal"), width: 2, dash: [5, 4] },
+        { f: (x) => -s * (1 + mu * m(x)), color: css("--signal"), width: 2, dash: [5, 4] },
+      ]);
+      const n = $(el, "#" + p + "note");
+      n.textContent = mu > 1 ? "Over-modulated (μ > 1): the envelope crosses zero and folds over, so an envelope detector will distort the message."
+        : mu === 1 ? "100% modulation: the envelope just touches zero."
+        : `The dashed envelope is a clean copy of the message. Power in the sidebands: ${Math.round((mu * mu / (2 + mu * mu)) * 100)}% of the total.`;
+    };
+    bind(el, [p + "mu", p + "fc"], draw);
+    window.addEventListener("resize", () => el.isConnected && draw());
+  };
+
+  /* ---------- Sampling and aliasing ---------- */
+  W.sampling = (el) => {
+    const p = idp();
+    el.innerHTML = `
+      <div class="w-grid">
+        ${slider(p + "f", "Signal frequency f (Hz)", 1, 20, 0.5, 3)}
+        ${slider(p + "fs", "Sampling rate fs (samples/s)", 2, 40, 1, 20)}
+      </div>
+      <canvas class="plot" id="${p}cv" aria-label="Signal, samples and reconstructed signal over one second"></canvas>
+      <div class="readout"><div><small>Nyquist rate (2f)</small><b id="${p}ny"></b></div><div><small>Frequency you'd reconstruct</small><b id="${p}al"></b></div></div>
+      <p class="w-note" id="${p}note"></p>`;
+    const cv = $(el, "#" + p + "cv");
+    const draw = () => {
+      const f = +$(el, "#" + p + "f").value, fs = +$(el, "#" + p + "fs").value;
+      $(el, "#" + p + "f-o").textContent = f + " Hz";
+      $(el, "#" + p + "fs-o").textContent = fs + " /s";
+      // Apparent frequency after sampling: fold f into [0, fs/2].
+      let fa = f % fs; if (fa > fs / 2) fa = fs - fa;
+      const sign = f % fs > fs / 2 ? -1 : 1;
+      const pts = []; for (let i = 0; i <= fs; i++) pts.push([i / fs, Math.sin(2 * Math.PI * f * (i / fs))]);
+      plotWaves(cv, [
+        { f: (x) => Math.sin(2 * Math.PI * f * x), color: css("--line"), width: 1.5 },
+        { f: (x) => sign * Math.sin(2 * Math.PI * fa * x), color: css("--accent"), width: 2.2, dash: [6, 4] },
+        { points: pts, color: css("--signal") },
+      ]);
+      $(el, "#" + p + "ny").textContent = 2 * f + " /s";
+      $(el, "#" + p + "al").textContent = +fa.toFixed(2) + " Hz";
+      const ok = fs > 2 * f;
+      $(el, "#" + p + "note").textContent = ok
+        ? "fs > 2f, so the samples (dots) rebuild the original signal correctly (dashed line matches)."
+        : `fs ≤ 2f: aliasing! The same samples fit a false ${+fa.toFixed(2)} Hz wave (dashed), and no receiver can tell the difference.`;
+    };
+    bind(el, [p + "f", p + "fs"], draw);
+    window.addEventListener("resize", () => el.isConnected && draw());
+  };
+
+  /* ---------- Buck / boost converter ---------- */
+  W.buck = (el) => {
+    const p = idp();
+    el.innerHTML = `
+      <div class="seg" role="tablist"><button class="on" data-m="buck">Buck (step down)</button><button data-m="boost">Boost (step up)</button></div>
+      <div class="w-grid">
+        ${slider(p + "vin", "Input voltage", 3, 24, 0.5, 12)}
+        ${slider(p + "d", "Duty cycle D", 5, 90, 1, 42)}
+      </div>
+      <canvas class="plot short" id="${p}cv" aria-label="Switch waveform with average output"></canvas>
+      <div class="readout big"><div><small>Output voltage (ideal)</small><b id="${p}out"></b></div><div><small>Formula</small><b id="${p}fx"></b></div></div>`;
+    const cv = $(el, "#" + p + "cv");
+    let mode = "buck";
+    const draw = () => {
+      const vin = +$(el, "#" + p + "vin").value, d = +$(el, "#" + p + "d").value / 100;
+      $(el, "#" + p + "vin-o").textContent = vin + " V";
+      $(el, "#" + p + "d-o").textContent = Math.round(d * 100) + "%";
+      const vout = mode === "buck" ? d * vin : vin / (1 - d);
+      $(el, "#" + p + "out").textContent = vout.toFixed(2) + " V";
+      $(el, "#" + p + "fx").textContent = mode === "buck" ? "D × Vin" : "Vin ÷ (1 − D)";
+      const top = Math.max(vin, vout) * 1.1, periods = 5;
+      const toY = (v) => (v / top) * 2 - 1;
+      plotWaves(cv, [
+        { f: (x) => toY(((x * periods) % 1) < d ? vin : 0), color: css("--line"), width: 1.5 },
+        { f: () => toY(vout), color: css("--accent"), width: 2.5 },
+      ], { scale: 0.95 });
+    };
+    el.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+      mode = b.dataset.m; el.querySelectorAll(".seg button").forEach((x) => x.classList.toggle("on", x === b)); draw();
+    }));
+    bind(el, [p + "vin", p + "d"], draw);
+    window.addEventListener("resize", () => el.isConnected && draw());
+  };
+
   window.mountWidgets = (root) => {
     root.querySelectorAll("[data-widget]").forEach((el) => {
       const fn = W[el.dataset.widget];

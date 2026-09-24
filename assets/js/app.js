@@ -3,7 +3,7 @@
   const PASS = 0.8; // 4 of 5 questions
   const SITE = "https://mathewsv-manoj.github.io/open-source-electronics-try-/";
   const SITE_SHORT = "mathewsv-manoj.github.io/open-source-electronics-try-";
-  const COURSE_NAME = "Foundations of Electronics, Embedded Systems & VLSI";
+  const COURSE_NAME = "Electronics Engineering: Foundations to Industry";
   const verifyUrl = (name, date, id) => `${SITE}#/verify/${id}/${date}/${encodeURIComponent(name)}`;
   const STORE = "opencircuit-progress-v1";
 
@@ -18,6 +18,10 @@
   };
   let state = Object.assign({ lessons: {}, quiz: {}, name: "" }, store.load());
   const save = () => { store.save(state); updateHeader(); };
+
+  // Order modules by branch so "next module" follows the learning path.
+  const ORDER = TRACKS.flatMap((t) => t.modules);
+  COURSE.sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
 
   const totalLessons = COURSE.reduce((n, m) => n + m.lessons.length, 0);
   const doneLessons = () => Object.keys(state.lessons).length;
@@ -54,37 +58,39 @@
   const labCount = new Set(COURSE.flatMap((m) => m.lessons.flatMap((l) => [...l.body.matchAll(/data-widget="(\w+)"/g)].map((x) => x[1])))).size;
   const hours = Math.round(COURSE.reduce((n, m) => n + m.lessons.reduce((a, l) => a + l.minutes, 0), 0) / 60);
 
+  const trackOf = (m) => TRACKS.find((t) => t.modules.includes(m.id));
+  const trackMods = (t) => t.modules.map((id) => COURSE.find((m) => m.id === id)).filter(Boolean);
+  const trackLessons = (t) => trackMods(t).reduce((n, m) => n + m.lessons.length, 0);
+  const trackDone = (t) => trackMods(t).reduce((n, m) => n + modDone(m), 0);
+  const catCount = (c) => PROJECTS.filter((p) => p.category === c).length;
+
   function home() {
     const started = doneLessons() > 0;
-    const featured = ["esp-weather", "pi-face", "tripwire"].map((id) => PROJECTS.find((p) => p.id === id)).filter(Boolean);
     return `
 <div class="home">
   <section class="intro">
     <span class="eyebrow">A free electronics course</span>
-    <h1>Learn electronics, one clear step at a time.</h1>
-    <p>Start with what voltage actually is and work up to Arduino, ESP32, Raspberry Pi, embedded systems and VLSI. Every idea is explained in plain words, with small simulators to try as you read.</p>
+    <h1>Learn electronics, from the electron to the industry.</h1>
+    <p>Never studied electronics? Start with the Foundations branch. Then explore analog, digital, embedded systems, VLSI, communication and power electronics, each from the basics to how it works in real companies.</p>
     <div class="btn-row">
-      <a class="btn primary big" href="${started ? nextStop() : "#/learn/basics/atoms"}">${started ? "Continue learning" : "Start the first lesson"}</a>
+      <a class="btn primary big" href="${started ? nextStop() : "#/track/foundations"}">${started ? "Continue learning" : "Start with Foundations"}</a>
       <a class="btn ghost big" href="#/projects">Browse projects</a>
     </div>
-    <div class="facts"><span><b>${COURSE.length}</b> modules</span><span><b>${totalLessons}</b> lessons</span><span><b>${labCount}</b> simulators</span><span><b>${PROJECTS.length}</b> projects</span><span>Certificate at the end</span></div>
+    <div class="facts"><span><b>${TRACKS.length}</b> branches</span><span><b>${totalLessons}</b> lessons</span><span><b>${labCount}</b> simulators</span><span><b>${PROJECTS.length}</b> projects</span><span>Certificate at the end</span></div>
   </section>
 
   <section class="home-sec">
-    <header><h2>The course</h2><a href="#/learn">Full syllabus</a></header>
-    <ol class="mod-list">
-      ${COURSE.map((m, i) => {
-        const d = modDone(m), n = m.lessons.length;
-        const status = quizPassed(m) ? `<span class="s done">Completed</span>` : `<span class="s">${d ? `${d} of ${n} done` : `${n} lessons`}</span>`;
-        return `<li><a href="#/learn/${m.id}"><span class="n">${String(i + 1).padStart(2, "0")}</span><span class="t">${m.title}</span>${status}<span class="d">${m.tagline}</span></a></li>`;
-      }).join("")}
-    </ol>
+    <header><h2>Branches of electronics</h2><a href="#/learn">See everything</a></header>
+    <p class="muted">Each branch goes from beginner to advanced, and ends with how that field works in industry.</p>
+    <div class="branch-grid">
+      ${TRACKS.map((t, i) => branchCard(t, i)).join("")}
+    </div>
   </section>
 
   <section class="home-sec">
-    <header><h2>Build something</h2><a href="#/projects">All ${PROJECTS.length} projects</a></header>
-    <div class="feature-projects">
-      ${featured.map((p) => `<a class="fp" href="#/projects/${p.id}"><span class="plat ${p.platform}">${PLATFORMS[p.platform].short}</span><b>${p.title}</b><span>${p.difficulty} · ${p.time}</span></a>`).join("")}
+    <header><h2>Projects</h2><a href="#/projects">All ${PROJECTS.length} projects</a></header>
+    <div class="cat-grid">
+      ${Object.entries(CATEGORIES).map(([k, c]) => `<a class="cat-card" href="#/projects/type/${k}"><b>${c.name}</b><span class="n">${catCount(k)} projects</span><span>${c.desc}</span></a>`).join("")}
     </div>
   </section>
 
@@ -99,32 +105,106 @@
 </div>`;
   }
 
+  function branchCard(t, i) {
+    const total = trackLessons(t), done = trackDone(t);
+    const levels = trackMods(t).map((m) => m.level);
+    const first = levels[0].split(" → ")[0], last = levels[levels.length - 1].split(" → ").pop();
+    const range = first === last ? first : `${first} → ${last}`;
+    return `
+      <a class="branch" href="#/track/${t.id}">
+        <span class="n">${String(i + 1).padStart(2, "0")}</span>
+        <b>${t.title}</b>
+        <span class="d">${t.tagline}</span>
+        <span class="meta">${trackMods(t).length} module${trackMods(t).length > 1 ? "s" : ""} · ${total} lessons · ${range}</span>
+        ${done ? `<span class="prog"><i style="width:${(done / total) * 100}%"></i></span>` : ""}
+      </a>`;
+  }
+
   function curriculum() {
     return `
 <section class="page-head">
-  <h1>The learning path</h1>
-  <p>${COURSE.length} modules · ${totalLessons} lessons · about ${hours} hours. Go in order: each module builds on the last.</p>
+  <h1>Learn</h1>
+  <p>${TRACKS.length} branches · ${COURSE.length} modules · ${totalLessons} lessons · about ${hours} hours. New to electronics? Do Foundations first; after that, follow the branches in any order you like.</p>
   <div class="bar"><div style="width:${pct()}%"></div></div>
-  <p class="muted small mono">${doneLessons()} / ${totalLessons} lessons done · ${COURSE.filter(quizPassed).length} / ${COURSE.length} quizzes passed</p>
+  <p class="muted small">${doneLessons()} of ${totalLessons} lessons done · ${COURSE.filter(quizPassed).length} of ${COURSE.length} quizzes passed</p>
 </section>
-<div class="modules">
-  ${COURSE.map((m) => `
-  <article class="module-card">
-    <span class="m-num">Module ${COURSE.indexOf(m) + 1} · ${m.level}</span>
-    <h2><a href="#/learn/${m.id}">${m.title}</a></h2>
-    <p>${m.tagline}</p>
-    <ol class="lesson-list">
-      ${m.lessons.map((l) => `<li class="${state.lessons[m.id + "/" + l.id] ? "done" : ""}"><a href="#/learn/${m.id}/${l.id}"><span class="chk"></span>${l.title}<small>${l.minutes} min</small></a></li>`).join("")}
-      <li class="quiz-li ${quizPassed(m) ? "done" : ""}"><a href="#/quiz/${m.id}"><span class="chk"></span>Module quiz${state.quiz[m.id] ? ` <small>best ${state.quiz[m.id].best}/${m.quiz.length}</small>` : ""}</a></li>
+<div class="tracks">
+  ${TRACKS.map((t, i) => `
+  <section class="track-row">
+    <div class="track-head">
+      <span class="n">${String(i + 1).padStart(2, "0")}</span>
+      <div><h2><a href="#/track/${t.id}">${t.title}</a></h2><p>${t.tagline}</p></div>
+    </div>
+    <ol class="track-mods">
+      ${trackMods(t).map((m) => `<li class="${quizPassed(m) ? "done" : ""}"><a href="#/learn/${m.id}"><span class="chk"></span><span class="t">${m.title}</span><span class="lvl">${m.level}</span><small>${modDone(m)}/${m.lessons.length}</small></a></li>`).join("")}
     </ol>
-  </article>`).join("")}
+  </section>`).join("")}
 </div>`;
   }
+
+  function trackPage(t) {
+    const mods = trackMods(t);
+    const i = TRACKS.indexOf(t);
+    const firstOpen = mods.find((m) => !quizPassed(m)) || mods[0];
+    const related = PROJECTS.filter((p) => (TRACK_PROJECTS[t.id] || []).includes(p.id));
+    return `
+<section class="page-head narrow">
+  <a class="crumb" href="#/learn">← All branches</a>
+  <span class="eyebrow">Branch ${i + 1} of ${TRACKS.length}</span>
+  <h1>${t.title}</h1>
+  <p class="lead">${t.what}</p>
+</section>
+<div class="narrow track-page">
+  <h2>Where it's used</h2>
+  <ul class="uses">${t.where.map((w) => `<li>${w}</li>`).join("")}</ul>
+
+  <h2>Your path, from basic to advanced</h2>
+  <ol class="path">
+    ${mods.map((m, k) => `
+    <li class="${quizPassed(m) ? "done" : ""}">
+      <span class="step">${k + 1}</span>
+      <div>
+        <a href="#/learn/${m.id}"><b>${m.title}</b></a> <span class="lvl">${m.level}</span>
+        <p>${m.tagline}</p>
+        <ul class="path-lessons">${m.lessons.map((l) => `<li class="${state.lessons[m.id + "/" + l.id] ? "done" : ""}"><a href="#/learn/${m.id}/${l.id}"><span class="chk"></span>${l.title}</a></li>`).join("")}</ul>
+      </div>
+    </li>`).join("")}
+  </ol>
+  <div class="btn-row"><a class="btn primary big" href="#/learn/${firstOpen.id}/${(firstOpen.lessons.find((l) => !state.lessons[firstOpen.id + "/" + l.id]) || firstOpen.lessons[0]).id}">${trackDone(t) ? "Continue this branch" : "Start this branch"}</a></div>
+
+  <h2>Working in this industry</h2>
+  <div class="industry">
+    <div><h3>Typical roles</h3><ul>${t.industry.roles.map((r) => `<li>${r}</li>`).join("")}</ul></div>
+    <div><h3>Tools you'll use</h3><ul>${t.industry.tools.map((r) => `<li>${r}</li>`).join("")}</ul></div>
+  </div>
+  <p class="muted">${t.industry.next} For how products are built and careers in general, see <a href="#/track/careers">Industry &amp; Careers</a>.</p>
+
+  ${related.length ? `<h2>Projects for this branch</h2>
+  <div class="proj-grid inline">${related.map(projCard).join("")}</div>` : ""}
+
+  <div class="track-nav">
+    ${i > 0 ? `<a href="#/track/${TRACKS[i - 1].id}">← ${TRACKS[i - 1].title}</a>` : "<span></span>"}
+    ${i < TRACKS.length - 1 ? `<a href="#/track/${TRACKS[i + 1].id}">${TRACKS[i + 1].title} →</a>` : "<span></span>"}
+  </div>
+</div>`;
+  }
+
+  // Hand-picked projects shown on each branch page.
+  const TRACK_PROJECTS = {
+    foundations: ["flasher555", "darksensor", "lab-rectifier", "sim-spice-rc", "nightlamp"],
+    analog: ["lab-rectifier", "lab-zener", "lab-ce-amp", "lab-opamp", "lab-rc-osc", "sim-spice-rect", "sim-fir"],
+    digital: ["lab-logic-ics", "lab-counter", "vlsi-alu", "vlsi-traffic", "vlsi-7seg"],
+    embedded: ["traffic", "reaction", "distance", "imu", "esp-weather", "esp-sleep", "pico-temp", "pi-dashboard"],
+    vlsi: ["vlsi-alu", "vlsi-traffic", "vlsi-uart", "vlsi-pwm", "vlsi-7seg"],
+    communication: ["sim-am", "sim-fft", "sim-bpsk", "sim-qam", "morse", "esp-gps", "esp-bt", "radar"],
+    power: ["lab-rectifier", "lab-zener", "sim-spice-rect", "plant", "linefollower"],
+    careers: ["pi-face", "esp-weather", "vlsi-uart"],
+  };
 
   function moduleOverview(m) {
     return `
 <section class="page-head narrow">
-  <a class="crumb" href="#/learn">← All modules</a>
+  <a class="crumb" href="#/track/${trackOf(m).id}">← ${trackOf(m).title}</a>
   <div class="m-hero"><div class="des-badge">${des(m)}</div><div><span class="m-num">Module ${COURSE.indexOf(m) + 1} · ${m.level}</span><h1>${m.title}</h1><p>${m.tagline}</p></div></div>
   <div class="bar"><div style="width:${(modDone(m) / m.lessons.length) * 100}%"></div></div>
 </section>
@@ -145,7 +225,7 @@
     return `
 <div class="lesson-layout">
   <aside class="side">
-    <a class="crumb" href="#/learn/${m.id}">Module ${mi + 1}</a>
+    <a class="crumb" href="#/track/${trackOf(m).id}">${trackOf(m).title}</a>
     <h3>${m.title}</h3>
     <ol class="side-list">
       ${m.lessons.map((x) => `<li class="${x === l ? "cur" : ""} ${state.lessons[m.id + "/" + x.id] ? "done" : ""}"><a href="#/learn/${m.id}/${x.id}"><span class="chk"></span>${x.title}</a></li>`).join("")}
@@ -258,21 +338,35 @@
     });
   }
 
-  const projFilter = { plat: "all", diff: "all" };
+  const projFilter = { cat: "all", plat: "all", diff: "all" };
   const DIFFS = ["Easy", "Medium", "Advanced"];
   const diffMeter = (d) => `<span class="diff-meter" title="${d}">${DIFFS.map((x, i) => `<i class="${i <= DIFFS.indexOf(d) ? "on" : ""}"></i>`).join("")}</span> ${d}`;
+  const LANGS = { cpp: "C++ (Arduino)", python: "Python", micropython: "MicroPython", verilog: "Verilog", spice: "SPICE netlist" };
 
-  function projects() {
+  function projCard(p) {
+    return `
+        <a class="proj-card" href="#/projects/${p.id}">
+          <div class="tags"><span class="plat ${p.platform}">${PLATFORMS[p.platform].short}</span>${CATEGORIES[p.category].name !== PLATFORMS[p.platform].short ? `<span class="cat-tag">${CATEGORIES[p.category].name}</span>` : ""}</div>
+          <h3>${p.title}</h3>
+          <p>${p.learn.join(" · ")}</p>
+          <div class="p-meta"><span>${diffMeter(p.difficulty)}</span><span>${p.time}</span></div>
+        </a>`;
+  }
+
+  function projects(cat) {
+    if (cat && CATEGORIES[cat]) { projFilter.cat = cat; projFilter.plat = "all"; }
     return `
 <section class="page-head">
-  <h1>Hands-on projects</h1>
-  <p>Theory sticks when you build. Every project lists the parts with prices, step-by-step wiring, working code and a challenge to push further. No hardware yet? Try the Arduino and ESP32 ones free in Wokwi or Tinkercad Circuits.</p>
+  <h1>Projects</h1>
+  <p>Learning sticks when you build. Every project includes the parts, connections and code (or the lab procedure), and what you should see. Pick a category:</p>
 </section>
+<div class="cat-tabs" id="f-cat" role="tablist">
+  <button data-v="all">All <small>${PROJECTS.length}</small></button>
+  ${Object.entries(CATEGORIES).map(([k, c]) => `<button data-v="${k}">${c.name} <small>${catCount(k)}</small></button>`).join("")}
+</div>
+<p class="cat-desc" id="cat-desc"></p>
 <div class="filters">
-  <div class="filter-row" id="f-plat"><span>Platform</span>
-    <button class="fchip" data-v="all">All<small>${PROJECTS.length}</small></button>
-    ${Object.entries(PLATFORMS).map(([k, v]) => `<button class="fchip" data-v="${k}">${v.short}<small>${PROJECTS.filter((p) => p.platform === k).length}</small></button>`).join("")}
-  </div>
+  <div class="filter-row" id="f-plat"></div>
   <div class="filter-row" id="f-diff"><span>Level</span>
     <button class="fchip" data-v="all">Any</button>
     ${DIFFS.map((d) => `<button class="fchip" data-v="${d}">${d}</button>`).join("")}
@@ -285,52 +379,71 @@
   function wireProjects() {
     const grid = document.getElementById("p-grid");
     const paint = () => {
-      document.querySelectorAll("#f-plat .fchip").forEach((b) => b.classList.toggle("on", b.dataset.v === projFilter.plat));
+      document.querySelectorAll("#f-cat button").forEach((b) => b.classList.toggle("on", b.dataset.v === projFilter.cat));
+      document.getElementById("cat-desc").textContent = projFilter.cat === "all" ? "Microcontroller builds, VLSI designs, simulations and lab experiments." : CATEGORIES[projFilter.cat].desc;
+      const inCat = PROJECTS.filter((p) => projFilter.cat === "all" || p.category === projFilter.cat);
+      const plats = [...new Set(inCat.map((p) => p.platform))];
+      if (!plats.includes(projFilter.plat)) projFilter.plat = "all";
+      document.getElementById("f-plat").innerHTML = plats.length > 1
+        ? `<span>Platform</span><button class="fchip" data-v="all">All</button>${plats.map((k) => `<button class="fchip" data-v="${k}">${PLATFORMS[k].short}<small>${inCat.filter((p) => p.platform === k).length}</small></button>`).join("")}`
+        : "";
+      document.querySelectorAll("#f-plat .fchip").forEach((b) => {
+        b.classList.toggle("on", b.dataset.v === projFilter.plat);
+        b.addEventListener("click", () => { projFilter.plat = b.dataset.v; paint(); });
+      });
       document.querySelectorAll("#f-diff .fchip").forEach((b) => b.classList.toggle("on", b.dataset.v === projFilter.diff));
-      const list = PROJECTS.filter((p) => (projFilter.plat === "all" || p.platform === projFilter.plat) && (projFilter.diff === "all" || p.difficulty === projFilter.diff));
+      const list = inCat.filter((p) => (projFilter.plat === "all" || p.platform === projFilter.plat) && (projFilter.diff === "all" || p.difficulty === projFilter.diff));
       document.getElementById("p-count").textContent = `${list.length} shown`;
-      grid.innerHTML = list.length ? list.map((p) => `
-        <a class="proj-card" href="#/projects/${p.id}">
-          <div><span class="plat ${p.platform}">${PLATFORMS[p.platform].short}</span></div>
-          <h3>${p.title}</h3>
-          <p>${p.learn.join(" · ")}</p>
-          <div class="p-meta"><span>${diffMeter(p.difficulty)}</span><span>${p.time}</span><span>${p.cost}</span></div>
-        </a>`).join("") : `<p class="muted">No projects match. Try another level.</p>`;
+      grid.innerHTML = list.length ? list.map(projCard).join("") : `<p class="muted">No projects match. Try another level.</p>`;
     };
-    document.querySelectorAll("#f-plat .fchip").forEach((b) => b.addEventListener("click", () => { projFilter.plat = b.dataset.v; paint(); }));
+    document.querySelectorAll("#f-cat button").forEach((b) => b.addEventListener("click", () => { projFilter.cat = b.dataset.v; paint(); }));
     document.querySelectorAll("#f-diff .fchip").forEach((b) => b.addEventListener("click", () => { projFilter.diff = b.dataset.v; paint(); }));
     paint();
   }
 
   function project(p) {
     const plat = PLATFORMS[p.platform];
+    const cat = CATEGORIES[p.category];
     const have = (state.parts && state.parts[p.id]) || [];
+    const isLab = p.category === "lab";
+    const codeBlock = p.codes
+      ? p.codes.map((c) => `<h3>${c.title}</h3>${H.code(c.src, c.lang)}`).join("")
+      : p.code ? H.code(p.code, p.lang)
+      : `<div class="no-code">No code needed: this is a hardware experiment. Follow the connections and procedure above.</div>`;
+    const lang = p.codes ? LANGS[p.codes[0].lang] : p.code ? LANGS[p.lang] : "None";
+    const safety = p.category === "mcu" && p.platform !== "arduino"
+      ? "remember these boards use 3.3 V logic — never feed 5 V into a GPIO pin"
+      : p.category === "vlsi" ? "read the simulator log for PASS or FAIL before trusting the waveform"
+      : p.category === "sim" ? "change one value at a time, so you know which change caused which effect"
+      : "switch off the supply before changing connections";
     return `
 <div class="proj-layout">
   <article class="lesson">
-    <a class="crumb" href="#/projects">← All projects</a>
-    <div><span class="plat ${p.platform}">${plat.short}</span></div>
+    <a class="crumb" href="#/projects/type/${p.category}">← ${cat.name} projects</a>
+    <div class="tags"><span class="plat ${p.platform}">${plat.short}</span>${cat.name !== plat.short ? `<span class="cat-tag">${cat.name}</span>` : ""}</div>
     <h1>${p.title}</h1>
     <h2>How it works</h2>
     ${p.how}
-    <h2>You'll need</h2>
-    <p class="muted small">Tick parts off as you collect them.</p>
+    <h2>${isLab ? "Components and equipment" : "You'll need"}</h2>
+    <p class="muted small">Tick items off as you collect them.</p>
     <ul class="parts-list">${p.parts.map((x, i) => `<li><label><input type="checkbox" data-part="${i}" ${have.includes(i) ? "checked" : ""}><span>${x}</span></label></li>`).join("")}</ul>
-    <h2>Build it</h2>
+    <h2>${isLab ? "Connections and procedure" : p.category === "mcu" ? "Connections" : "How to run it"}</h2>
     ${H.steps(p.steps)}
-    <h2>${p.code ? "Code" : "Code"}</h2>
-    ${p.code ? H.code(p.code, p.lang) : `<div class="no-code">No code needed. This circuit works with components alone, and that's the point: it shows what hardware can do before any software.</div>`}
+    ${p.observe ? `<h2>What to measure and expect</h2>${p.observe}` : ""}
+    ${isLab && !p.code ? "" : `<h2>${p.codes ? "Code" : p.lang === "spice" ? "Netlist" : "Code"}</h2>`}
+    ${isLab && !p.code ? "" : codeBlock}
     <div class="challenge"><span class="eyebrow">Take it further</span><p>${p.challenge}</p></div>
-    ${H.mistake(`<p>Double-check polarity (LEDs, electrolytic capacitors, diodes), connect all grounds together, and ${p.platform === "arduino" || p.platform === "analog" ? "power down before rewiring" : "remember these boards use 3.3 V logic — never feed 5 V into a GPIO pin"}.</p>`)}
+    ${H.mistake(`<p>Double-check polarity (LEDs, electrolytic capacitors, diodes), connect all grounds together, and ${safety}.</p>`)}
   </article>
   <aside class="spec-card">
     <h4>At a glance</h4>
     <dl>
+      <div><dt>Category</dt><dd>${cat.name}</dd></div>
       <div><dt>Platform</dt><dd>${plat.name}</dd></div>
       <div><dt>Level</dt><dd>${diffMeter(p.difficulty)}</dd></div>
-      <div><dt>Build time</dt><dd>${p.time}</dd></div>
-      <div><dt>Parts cost</dt><dd>${p.cost}</dd></div>
-      <div><dt>Language</dt><dd>${p.code ? { cpp: "C++ (Arduino)", python: "Python", micropython: "MicroPython" }[p.lang] : "None"}</dd></div>
+      <div><dt>Time</dt><dd>${p.time}</dd></div>
+      <div><dt>Cost</dt><dd>${p.cost}</dd></div>
+      <div><dt>Code</dt><dd>${lang}</dd></div>
     </dl>
     <div class="learn"><span class="eyebrow">You'll learn</span><ul>${p.learn.map((x) => `<li>${x}</li>`).join("")}</ul></div>
   </aside>
@@ -447,13 +560,13 @@ ${verifyOnly ? `<section class="page-head narrow"><h1>Verify a certificate</h1><
     ctx.fillStyle = "#ffffff"; ctx.font = "600 38px system-ui, sans-serif";
     ctx.fillText(COURSE_NAME, W / 2, 590);
     ctx.fillStyle = "#94a3b8"; ctx.font = "22px system-ui, sans-serif";
-    const titles = COURSE.map((m) => m.title.replace(/:.*/, ""));
+    const titles = TRACKS.map((t) => t.title);
     const half = Math.ceil(titles.length / 2);
     ctx.fillText(titles.slice(0, half).join("  •  "), W / 2, 660);
     ctx.fillText(titles.slice(half).join("  •  "), W / 2, 695);
     const avg = Math.round((COURSE.reduce((s, m) => s + state.quiz[m.id].best / m.quiz.length, 0) / COURSE.length) * 100);
     ctx.fillStyle = "#3fd0bf"; ctx.font = "600 26px system-ui, sans-serif";
-    ctx.fillText(`${COURSE.length} modules · ${totalLessons} lessons · Average assessment score ${avg}%`, W / 2, 760);
+    ctx.fillText(`${TRACKS.length} branches · ${COURSE.length} modules · ${totalLessons} lessons · Average assessment score ${avg}%`, W / 2, 760);
     // footer
     ctx.textAlign = "left"; ctx.fillStyle = "#cbd5e1"; ctx.font = "22px system-ui";
     ctx.fillText("Date of completion", 140, 900);
@@ -590,6 +703,8 @@ ${verifyOnly ? `<section class="page-head narrow"><h1>Verify a certificate</h1><
     }
     else if (parts[0] === "quiz" && mod(parts[1])) { const m = mod(parts[1]); html = quiz(m); after = () => wireQuiz(m); title = "Quiz: " + m.title; }
     else if (parts[0] === "projects" && !parts[1]) { html = projects(); title = "Projects"; after = wireProjects; }
+    else if (parts[0] === "projects" && parts[1] === "type") { html = projects(parts[2]); title = "Projects"; after = wireProjects; }
+    else if (parts[0] === "track") { const t = TRACKS.find((x) => x.id === parts[1]); html = t ? trackPage(t) : notFound(); if (t) title = t.title; }
     else if (parts[0] === "projects") { const p = PROJECTS.find((x) => x.id === parts[1]); html = p ? project(p) : notFound(); if (p) { title = p.title; after = () => wireProject(p); } }
     else if (parts[0] === "glossary") {
       html = glossary(); title = "Glossary";
@@ -604,7 +719,7 @@ ${verifyOnly ? `<section class="page-head narrow"><h1>Verify a certificate</h1><
 
     app.innerHTML = html;
     document.title = title === "OpenCircuit Academy" ? title : `${title} · OpenCircuit Academy`;
-    setActiveNav("/" + (parts[0] || ""));
+    setActiveNav("/" + (parts[0] === "track" ? "learn" : parts[0] || ""));
     window.mountWidgets(app);
     if (after) after();
     window.scrollTo(0, 0);
