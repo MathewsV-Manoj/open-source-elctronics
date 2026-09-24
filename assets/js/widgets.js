@@ -644,6 +644,43 @@
     render();
   };
 
+  /* ---------- Board picker ---------- */
+  W.boardpicker = (el) => {
+    const p = idp();
+    // Score each need per board: 2 = great fit, 1 = possible, -2 = poor fit.
+    const needs = [
+      ["wifi", "Wi-Fi or Bluetooth", { uno: -2, esp: 2, pico: 1, pi: 2 }],
+      ["camera", "Camera, vision or AI", { uno: -2, esp: -1, pico: -2, pi: 2 }],
+      ["python", "I want to code in Python", { uno: -2, esp: 1, pico: 2, pi: 2 }],
+      ["battery", "Runs for months on a battery", { uno: -1, esp: 2, pico: 1, pi: -2 }],
+      ["realtime", "Precise real-time timing (motors, pulses)", { uno: 2, esp: 1, pico: 2, pi: -2 }],
+      ["analog", "Several analog sensors", { uno: 2, esp: 1, pico: 1, pi: -2 }],
+      ["gui", "Screen, web app or database", { uno: -2, esp: 0, pico: -1, pi: 2 }],
+      ["cheap", "Lowest possible cost", { uno: 1, esp: 2, pico: 2, pi: -2 }],
+      ["five", "5 V sensors and shields, beginner friendly", { uno: 2, esp: -1, pico: -1, pi: -1 }],
+    ];
+    const boards = { uno: "Arduino Uno", esp: "ESP32", pico: "Raspberry Pi Pico", pi: "Raspberry Pi 4/5" };
+    const why = {
+      uno: "Simple, 5 V tolerant, huge beginner community and shields.",
+      esp: "Wi-Fi + Bluetooth, dual-core, deep sleep, and still very cheap.",
+      pico: "MicroPython-friendly, precise PIO timing, lowest cost.",
+      pi: "A full Linux computer: cameras, AI, web apps and databases.",
+    };
+    el.innerHTML = `
+      <div class="checks">${needs.map(([k, label], i) => `<label class="check"><input type="checkbox" id="${p}${k}" ${i === 0 || i === 3 ? "checked" : ""}><span>${label}</span></label>`).join("")}</div>
+      <div class="pick-results" id="${p}res"></div>`;
+    const update = () => {
+      const picked = needs.filter(([k]) => $(el, "#" + p + k).checked);
+      const scores = Object.keys(boards).map((b) => ({ b, s: picked.reduce((t, [, , sc]) => t + sc[b], 0) }));
+      scores.sort((a, b) => b.s - a.s);
+      $(el, "#" + p + "res").innerHTML = picked.length
+        ? scores.map((x, i) => `<div class="pick ${i === 0 ? "best" : ""}"><div class="pick-top"><b>${boards[x.b]}</b>${i === 0 ? '<span class="pill-best">Best match</span>' : ""}</div><div class="pick-bar"><i style="width:${Math.max(4, ((x.s + picked.length * 2) / (picked.length * 4)) * 100)}%"></i></div><small>${why[x.b]}</small></div>`).join("")
+        : `<p class="w-note">Tick at least one need to see a recommendation.</p>`;
+    };
+    needs.forEach(([k]) => $(el, "#" + p + k).addEventListener("change", update));
+    update();
+  };
+
   window.mountWidgets = (root) => {
     root.querySelectorAll("[data-widget]").forEach((el) => {
       const fn = W[el.dataset.widget];

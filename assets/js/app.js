@@ -46,75 +46,170 @@
   }
 
   /* ---------------- Pages ---------------- */
+  const des = (m) => "U" + (COURSE.indexOf(m) + 1);
+  const labCount = new Set(COURSE.flatMap((m) => m.lessons.flatMap((l) => [...l.body.matchAll(/data-widget="(\w+)"/g)].map((x) => x[1])))).size;
+  const hours = Math.round(COURSE.reduce((n, m) => n + m.lessons.reduce((a, l) => a + l.minutes, 0), 0) / 60);
+
   function home() {
     const started = doneLessons() > 0;
+    const perPlat = (k) => PROJECTS.filter((p) => p.platform === k).length;
     return `
 <section class="hero">
-  <div class="hero-bg" aria-hidden="true">${circuitBg()}</div>
-  <div class="hero-inner">
-    <span class="pill">Free · Open source · Made by an ECE student for ECE students</span>
-    <h1>Learn electronics <span class="grad">from zero to embedded & VLSI</span></h1>
-    <p class="hero-sub">No boring theory dumps. Every concept is explained with everyday analogies, and you get interactive simulators to play with. Finish the path, pass the quizzes and earn your certificate.</p>
-    <div class="hero-cta">
-      <a class="btn primary big" href="${started ? nextStop() : "#/learn/basics/atoms"}">${started ? "Continue learning →" : "Start learning — it's free →"}</a>
-      <a class="btn ghost big" href="#/learn">See the full path</a>
+  <div class="hero-grid">
+    <div>
+      <span class="eyebrow">Free electronics course · Built by an ECE student</span>
+      <h1>See the signal. <em>Understand the circuit.</em></h1>
+      <p class="hero-sub">From your first electron to ESP32, Raspberry Pi and VLSI. Plain-language explanations, live simulators you can play with, real projects, and a certificate when you finish.</p>
+      <div class="hero-cta">
+        <a class="btn primary big" href="${started ? nextStop() : "#/learn/basics/atoms"}">${started ? "Continue where you left off" : "Start lesson 1"}</a>
+        <a class="btn on-mask big" href="#/learn">View the syllabus</a>
+      </div>
     </div>
-    <div class="stats">
-      <div><b>${COURSE.length}</b><span>modules</span></div>
-      <div><b>${totalLessons}</b><span>lessons</span></div>
-      <div><b>17</b><span>simulators</span></div>
-      <div><b>${PROJECTS.length}</b><span>projects</span></div>
+    <div class="scope" aria-label="Oscilloscope showing example waveforms">
+      <div class="scope-head"><span><b>CH1</b> · 1 V/div · 5 ms/div</span><span id="scope-name">SINE · 50 Hz</span></div>
+      <canvas id="scope"></canvas>
+      <div class="scope-tabs" role="tablist">
+        <button class="on" data-w="sine">AC mains</button><button data-w="pwm">PWM 30%</button><button data-w="rc">RC charge</button><button data-w="uart">UART 'A'</button>
+      </div>
+      <p class="scope-cap" id="scope-cap"></p>
     </div>
+  </div>
+  <div class="spec-strip">
+    <dl>
+      <div><dt>Modules</dt><dd>${COURSE.length}</dd></div>
+      <div><dt>Lessons</dt><dd>${totalLessons}</dd></div>
+      <div><dt>Live labs</dt><dd>${labCount}</dd></div>
+      <div><dt>Projects</dt><dd>${PROJECTS.length}</dd></div>
+      <div><dt>Cost</dt><dd>₹0</dd></div>
+    </dl>
   </div>
 </section>
 
 <section class="section">
-  <h2 class="sec-title">Your journey, one step at a time</h2>
-  <p class="sec-sub">Each module builds on the one before. You'll start with "what is an electron?" and end up writing Verilog and register-level firmware.</p>
-  <div class="journey">
-    ${COURSE.map((m, i) => `
-      <a class="j-step ${quizPassed(m) ? "done" : ""}" href="#/learn/${m.id}">
-        <div class="j-num">${quizPassed(m) ? "✓" : i + 1}</div>
-        <div class="j-body"><div class="j-ico">${m.icon}</div><h3>${m.title}</h3><p>${m.tagline}</p><span class="tag">${m.level}</span></div>
-      </a>`).join("")}
-    <a class="j-step final" href="#/certificate"><div class="j-num">🏆</div><div class="j-body"><h3>Earn your certificate</h3><p>Pass every module quiz and your certificate is generated automatically.</p></div></a>
+  <div class="sec-head">
+    <div><span class="eyebrow">The syllabus</span><h2>Nine chips, one path</h2></div>
+    <p>Each module is one chip on the board, labelled U1 to U9 like parts on a real circuit. Go in order: every module builds on the last, from "what is voltage?" to writing Verilog and hosting a web server on an ESP32. About ${hours} hours in total.</p>
+  </div>
+  <div class="chips-grid">
+    ${COURSE.map((m) => {
+      const d = modDone(m), n = m.lessons.length;
+      return `
+      <a class="ic" href="#/learn/${m.id}">
+        <div class="ic-body"><span class="ic-notch" aria-hidden="true"></span>
+          <div class="ic-top"><span class="des">${des(m)}</span><span>${m.level}</span></div>
+          <h3>${m.title}</h3>
+          <p>${m.tagline}</p>
+          <div class="ic-foot"><span class="led-dot ${quizPassed(m) ? "on" : ""}" title="${quizPassed(m) ? "Quiz passed" : "Quiz not passed yet"}"></span><span>${d}/${n} lessons</span><span class="meter"><i style="width:${(d / n) * 100}%"></i></span></div>
+        </div>
+      </a>`;
+    }).join("")}
+    <a class="ic cert" href="#/certificate">
+      <div class="ic-body"><span class="ic-notch" aria-hidden="true"></span>
+        <div class="ic-top"><span class="des">OUT</span><span>Final output</span></div>
+        <h3>Your certificate</h3>
+        <p>Pass all ${COURSE.length} module quizzes and a certificate with a unique, verifiable ID is generated for you instantly.</p>
+        <div class="ic-foot"><span class="led-dot ${allPassed() ? "on" : ""}"></span><span>${COURSE.filter(quizPassed).length}/${COURSE.length} quizzes passed</span></div>
+      </div>
+    </a>
   </div>
 </section>
 
 <section class="section">
-  <h2 class="sec-title">Why this way of learning works</h2>
-  <div class="features">
-    <div class="feature"><div class="f-ico">💡</div><h3>Analogies first</h3><p>Voltage is water pressure. A capacitor is a water balloon. Understand the idea before the equation.</p></div>
-    <div class="feature"><div class="f-ico">🎛️</div><h3>Play, don't memorise</h3><p>Drag sliders, flip bits, toggle gates. See what changes, and build real intuition.</p></div>
-    <div class="feature"><div class="f-ico">🛠️</div><h3>Build real things</h3><p>Guided Arduino projects with parts lists, wiring and working code — from a traffic light to a radar.</p></div>
-    <div class="feature"><div class="f-ico">🎓</div><h3>GATE-aware</h3><p>"GATE corner" notes connect each concept to the GATE ECE syllabus, so learning doubles as exam prep.</p></div>
-    <div class="feature"><div class="f-ico">✅</div><h3>Quizzes & feedback</h3><p>Every module ends with a short quiz, and every answer comes with an explanation.</p></div>
-    <div class="feature"><div class="f-ico">🏅</div><h3>Automatic certificate</h3><p>Finish all modules and a verifiable certificate with a unique ID is generated for you instantly.</p></div>
+  <div class="sec-head">
+    <div><span class="eyebrow">How you'll learn</span><h2>Idea first, maths second</h2></div>
+    <p>Every lesson follows the same rhythm, so you always know where you are.</p>
+  </div>
+  <div class="method">
+    <div><span class="eyebrow">01 · Big idea</span><h3>One sentence to hold on to</h3><p>Each lesson opens with the single idea that matters, before any detail.</p></div>
+    <div><span class="eyebrow">02 · Analogy</span><h3>Water tanks, not jargon</h3><p>Voltage is pressure, a capacitor is a water balloon, an interrupt is your phone ringing.</p></div>
+    <div><span class="eyebrow">03 · Live lab</span><h3>Change it and watch</h3><p>Drag sliders, flip bits and toggle gates in ${labCount} simulators that run right on the page.</p></div>
+    <div><span class="eyebrow">04 · Watch out</span><h3>Mistakes, before you make them</h3><p>Reversed capacitors, floating pins, 5 V on a 3.3 V board: we flag the classic traps.</p></div>
+    <div><span class="eyebrow">05 · GATE corner</span><h3>Exam-ready as you go</h3><p>Notes link each topic to the GATE ECE syllabus, so learning doubles as preparation.</p></div>
+    <div><span class="eyebrow">06 · Recap & quiz</span><h3>Check it stuck</h3><p>Three-point recaps, and a quiz at the end of each module with every answer explained.</p></div>
   </div>
 </section>
 
-<section class="section cta-band">
-  <h2>Every expert was once a beginner.</h2>
-  <p>The engineers who design satellites, radars and smartphone chips all started by lighting up one LED. Start yours today.</p>
-  <a class="btn primary big" href="${nextStop()}">${started ? "Pick up where you left off →" : "Light up your first LED →"}</a>
+<section class="section">
+  <div class="sec-head">
+    <div><span class="eyebrow">Build something</span><h2>${PROJECTS.length} projects on five platforms</h2></div>
+    <p>Each project has a parts list with prices, step-by-step wiring, working code and a stretch challenge. From a 555 flasher to face detection on a Raspberry Pi.</p>
+  </div>
+  <div class="platform-row">
+    ${Object.entries(PLATFORMS).map(([k, v]) => `<a class="platform-tile" href="#/projects" data-plat="${k}"><span class="plat ${k}">${v.short}</span><b>${v.name}</b><span>${perPlat(k)} projects</span></a>`).join("")}
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="cta-inner">
+    <div><h2>Every expert started with one LED.</h2><p>The engineers who design satellites, radars and phone chips all began exactly here.</p></div>
+    <a class="btn primary big" href="${nextStop()}">${started ? "Pick up where you left off" : "Light up your first LED"}</a>
+  </div>
 </section>`;
+  }
+
+  // Oscilloscope on the home page: four real waveforms from the course.
+  function startScope() {
+    const cv = document.getElementById("scope");
+    if (!cv) return;
+    const waves = {
+      sine: ["SINE · 50 Hz", "India's mains: 230 V RMS at 50 Hz, reversing direction 100 times a second (Module 1).", (x) => Math.sin(x * Math.PI * 2 * 2)],
+      pwm: ["PWM · 30% DUTY", "analogWrite(9, 77): the pin is HIGH 30% of each cycle, so an LED looks 30% bright (Module 6).", (x) => ((x * 5) % 1 < 0.3 ? 0.8 : -0.8)],
+      rc: ["RC · τ = 1 div", "A capacitor charging through a resistor: 63% after one time constant, full after five (Module 2).", (x) => { const t = (x * 2) % 1 * 8; return 1.6 * (1 - Math.exp(-t)) - 0.8; }],
+      uart: ["UART · 'A' = 0x41", "Idle high, start bit, then 0x41 sent LSB first: 1 0 0 0 0 0 1 0, then the stop bit (Module 7).", (x) => { const bits = [1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1]; return bits[Math.min(bits.length - 1, Math.floor(x * bits.length))] ? 0.7 : -0.7; }],
+    };
+    let cur = "sine", phase = 0;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const setWave = (k) => {
+      cur = k;
+      document.querySelectorAll(".scope-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.w === k));
+      document.getElementById("scope-name").textContent = waves[k][0];
+      document.getElementById("scope-cap").textContent = waves[k][1];
+      if (reduce) draw();
+    };
+    function draw() {
+      const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+      if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+      const ctx = cv.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = "#06140f"; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(143,184,164,.14)"; ctx.lineWidth = 1;
+      for (let i = 1; i < 10; i++) { const x = (i / 10) * w; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+      for (let i = 1; i < 8; i++) { const y = (i / 8) * h; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      ctx.strokeStyle = "rgba(143,184,164,.35)";
+      ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+      const f = waves[cur][2], scroll = cur === "uart" || cur === "rc" ? 0 : phase;
+      ctx.shadowColor = "#3fd0bf"; ctx.shadowBlur = 8; ctx.strokeStyle = "#3fd0bf"; ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let px = 0; px <= w; px++) { const y = h / 2 - f((px / w + scroll) % 1) * (h * 0.38); px ? ctx.lineTo(px, y) : ctx.moveTo(px, y); }
+      ctx.stroke(); ctx.shadowBlur = 0;
+    }
+    function tick() {
+      if (!cv.isConnected) return;
+      phase = (phase + 0.0025) % 1;
+      draw();
+      requestAnimationFrame(tick);
+    }
+    document.querySelectorAll(".scope-tabs button").forEach((b) => b.addEventListener("click", () => setWave(b.dataset.w)));
+    setWave("sine");
+    reduce ? draw() : requestAnimationFrame(tick);
+    document.querySelectorAll(".platform-tile").forEach((a) => a.addEventListener("click", () => { projFilter.plat = a.dataset.plat; }));
   }
 
   function curriculum() {
     return `
 <section class="page-head">
+  <span class="eyebrow">Syllabus</span>
   <h1>The learning path</h1>
-  <p>${COURSE.length} modules · ${totalLessons} lessons · about ${Math.round(COURSE.reduce((n, m) => n + m.lessons.reduce((a, l) => a + l.minutes, 0), 0) / 60)} hours. Go in order — each module builds on the last.</p>
+  <p>${COURSE.length} modules · ${totalLessons} lessons · about ${hours} hours. Go in order: each module builds on the last.</p>
   <div class="bar"><div style="width:${pct()}%"></div></div>
-  <p class="muted small">${doneLessons()} / ${totalLessons} lessons done · ${COURSE.filter(quizPassed).length} / ${COURSE.length} quizzes passed</p>
+  <p class="muted small mono">${doneLessons()} / ${totalLessons} lessons done · ${COURSE.filter(quizPassed).length} / ${COURSE.length} quizzes passed</p>
 </section>
 <div class="modules">
-  ${COURSE.map((m, i) => `
+  ${COURSE.map((m) => `
   <article class="module-card">
-    <header>
-      <div class="m-ico">${m.icon}</div>
-      <div><span class="m-num">Module ${i + 1} · ${m.level}</span><h2><a href="#/learn/${m.id}">${m.title}</a></h2><p>${m.tagline}</p></div>
-    </header>
+    <span class="m-num">${des(m)} · ${m.level}</span>
+    <h2><a href="#/learn/${m.id}">${m.title}</a></h2>
+    <p>${m.tagline}</p>
     <ol class="lesson-list">
       ${m.lessons.map((l) => `<li class="${state.lessons[m.id + "/" + l.id] ? "done" : ""}"><a href="#/learn/${m.id}/${l.id}"><span class="chk"></span>${l.title}<small>${l.minutes} min</small></a></li>`).join("")}
       <li class="quiz-li ${quizPassed(m) ? "done" : ""}"><a href="#/quiz/${m.id}"><span class="chk"></span>Module quiz${state.quiz[m.id] ? ` <small>best ${state.quiz[m.id].best}/${m.quiz.length}</small>` : ""}</a></li>
@@ -124,18 +219,17 @@
   }
 
   function moduleOverview(m) {
-    const i = COURSE.indexOf(m);
     return `
-<section class="page-head">
+<section class="page-head narrow">
   <a class="crumb" href="#/learn">← All modules</a>
-  <div class="m-hero"><div class="m-ico big">${m.icon}</div><div><span class="m-num">Module ${i + 1} · ${m.level}</span><h1>${m.title}</h1><p>${m.tagline}</p></div></div>
+  <div class="m-hero"><div class="des-badge">${des(m)}</div><div><span class="m-num">Module ${COURSE.indexOf(m) + 1} · ${m.level}</span><h1>${m.title}</h1><p>${m.tagline}</p></div></div>
   <div class="bar"><div style="width:${(modDone(m) / m.lessons.length) * 100}%"></div></div>
 </section>
 <ol class="lesson-list big">
-  ${m.lessons.map((l, k) => `<li class="${state.lessons[m.id + "/" + l.id] ? "done" : ""}"><a href="#/learn/${m.id}/${l.id}"><span class="chk"></span><span class="ln">${k + 1}</span>${l.title}<small>${l.minutes} min</small></a></li>`).join("")}
-  <li class="quiz-li ${quizPassed(m) ? "done" : ""}"><a href="#/quiz/${m.id}"><span class="chk"></span><span class="ln">★</span>Module quiz — ${m.quiz.length} questions<small>${quizPassed(m) ? "passed" : "pass with 80%"}</small></a></li>
+  ${m.lessons.map((l, k) => `<li class="${state.lessons[m.id + "/" + l.id] ? "done" : ""}"><a href="#/learn/${m.id}/${l.id}"><span class="chk"></span><span class="ln">${k + 1}</span><span>${l.title}${RECAPS[m.id + "/" + l.id] ? `<br><small class="muted" style="margin:0;font-family:var(--font);white-space:normal">${RECAPS[m.id + "/" + l.id].idea}</small>` : ""}</span><small>${l.minutes} min</small></a></li>`).join("")}
+  <li class="quiz-li ${quizPassed(m) ? "done" : ""}"><a href="#/quiz/${m.id}"><span class="chk"></span><span class="ln">Q</span>Module quiz: ${m.quiz.length} questions<small>${quizPassed(m) ? "passed" : "pass: 80%"}</small></a></li>
 </ol>
-<div class="center"><a class="btn primary big" href="#/learn/${m.id}/${(m.lessons.find((l) => !state.lessons[m.id + "/" + l.id]) || m.lessons[0]).id}">Start module →</a></div>`;
+<div class="center"><a class="btn primary big" href="#/learn/${m.id}/${(m.lessons.find((l) => !state.lessons[m.id + "/" + l.id]) || m.lessons[0]).id}">Start module</a></div>`;
   }
 
   function lesson(m, l) {
@@ -144,10 +238,11 @@
     const prev = idx > 0 ? `#/learn/${m.id}/${m.lessons[idx - 1].id}` : mi > 0 ? `#/quiz/${COURSE[mi - 1].id}` : null;
     const next = idx < m.lessons.length - 1 ? `#/learn/${m.id}/${m.lessons[idx + 1].id}` : `#/quiz/${m.id}`;
     const nextLabel = idx < m.lessons.length - 1 ? m.lessons[idx + 1].title : "Module quiz";
+    const rc = RECAPS[m.id + "/" + l.id];
     return `
 <div class="lesson-layout">
   <aside class="side">
-    <a class="crumb" href="#/learn/${m.id}">${m.icon} Module ${mi + 1}</a>
+    <a class="crumb" href="#/learn/${m.id}">${des(m)} · Module ${mi + 1}</a>
     <h3>${m.title}</h3>
     <ol class="side-list">
       ${m.lessons.map((x) => `<li class="${x === l ? "cur" : ""} ${state.lessons[m.id + "/" + x.id] ? "done" : ""}"><a href="#/learn/${m.id}/${x.id}"><span class="chk"></span>${x.title}</a></li>`).join("")}
@@ -155,15 +250,40 @@
     </ol>
   </aside>
   <article class="lesson">
-    <div class="lesson-meta">Lesson ${idx + 1} of ${m.lessons.length} · ⏱ ${l.minutes} min read</div>
+    <div class="lesson-meta"><span>LESSON ${idx + 1}/${m.lessons.length}</span><span>${l.minutes} MIN READ</span><span>${m.level.toUpperCase()}</span></div>
     <h1>${l.title}</h1>
+    ${rc ? `<div class="big-idea"><span class="eyebrow">The big idea</span><p>${rc.idea}</p></div>` : ""}
     ${l.body}
+    ${rc ? `<section class="recap"><div class="recap-head"><span>Quick recap</span><span>${des(m)}.${idx + 1}</span></div><ol>${rc.recap.map((r) => `<li>${r}</li>`).join("")}</ol></section>` : ""}
     <div class="lesson-nav">
       ${prev ? `<a class="btn ghost" href="${prev}">← Previous</a>` : "<span></span>"}
       <a class="btn primary" href="${next}" data-complete="${m.id}/${l.id}">Mark complete & continue → <small>${nextLabel}</small></a>
     </div>
   </article>
+  <nav class="toc" aria-label="On this page"><span class="eyebrow">On this page</span><div id="toc-links"></div></nav>
 </div>`;
+  }
+
+  // Build the "On this page" list from the lesson's h2s and highlight the current one.
+  function wireToc() {
+    const links = document.getElementById("toc-links");
+    const heads = [...document.querySelectorAll(".lesson h2")];
+    if (heads.length < 2) { links.closest(".toc").style.visibility = "hidden"; return; }
+    heads.forEach((h, i) => (h.id = "s" + i));
+    links.innerHTML = heads.map((h) => `<a href="#" data-to="${h.id}">${h.textContent}</a>`).join("");
+    links.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (!a) return;
+      e.preventDefault(); // keep the route in the hash
+      document.getElementById(a.dataset.to).scrollIntoView({ behavior: "smooth" });
+    });
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) links.querySelectorAll("a").forEach((a) => a.classList.toggle("on", a.dataset.to === en.target.id));
+      });
+    }, { rootMargin: "-10% 0px -75% 0px" });
+    heads.forEach((h) => io.observe(h));
   }
 
   function quiz(m) {
@@ -171,7 +291,8 @@
     return `
 <section class="page-head narrow">
   <a class="crumb" href="#/learn/${m.id}">← ${m.title}</a>
-  <h1>${m.icon} Module quiz</h1>
+  <span class="eyebrow">${des(m)} · Module quiz</span>
+  <h1>${m.title}</h1>
   <p>${m.quiz.length} questions. Get ${Math.ceil(m.quiz.length * PASS)} right to pass. Every answer is explained — wrong answers are how you learn!${prev ? ` <br><b>Your best so far: ${prev.best}/${m.quiz.length}</b>` : ""}</p>
 </section>
 <form class="quiz narrow" id="quiz">
@@ -234,35 +355,92 @@
     });
   }
 
+  const projFilter = { plat: "all", diff: "all" };
+  const DIFFS = ["Easy", "Medium", "Advanced"];
+  const diffMeter = (d) => `<span class="diff-meter" title="${d}">${DIFFS.map((x, i) => `<i class="${i <= DIFFS.indexOf(d) ? "on" : ""}"></i>`).join("")}</span> ${d}`;
+
   function projects() {
     return `
 <section class="page-head">
+  <span class="eyebrow">Build something</span>
   <h1>Hands-on projects</h1>
-  <p>Theory sticks when you build. Each project lists the parts, the wiring, working code and a challenge to push further. No hardware yet? Build them all free in <b>Tinkercad Circuits</b>.</p>
+  <p>Theory sticks when you build. Every project lists the parts with prices, step-by-step wiring, working code and a challenge to push further. No hardware yet? Try the Arduino and ESP32 ones free in Wokwi or Tinkercad Circuits.</p>
 </section>
-<div class="proj-grid">
-  ${PROJECTS.map((p) => `
-  <a class="proj-card" href="#/projects/${p.id}">
-    <div class="p-ico">${p.icon}</div>
-    <h3>${p.title}</h3>
-    <div class="p-meta"><span class="diff ${p.difficulty.toLowerCase()}">${p.difficulty}</span><span>⏱ ${p.time}</span></div>
-    <p>You'll learn: ${p.learn.join(", ")}</p>
-  </a>`).join("")}
-</div>`;
+<div class="filters">
+  <div class="filter-row" id="f-plat"><span>Platform</span>
+    <button class="fchip" data-v="all">All<small>${PROJECTS.length}</small></button>
+    ${Object.entries(PLATFORMS).map(([k, v]) => `<button class="fchip" data-v="${k}">${v.short}<small>${PROJECTS.filter((p) => p.platform === k).length}</small></button>`).join("")}
+  </div>
+  <div class="filter-row" id="f-diff"><span>Level</span>
+    <button class="fchip" data-v="all">Any</button>
+    ${DIFFS.map((d) => `<button class="fchip" data-v="${d}">${d}</button>`).join("")}
+    <span class="proj-count" id="p-count"></span>
+  </div>
+</div>
+<div class="proj-grid" id="p-grid"></div>`;
+  }
+
+  function wireProjects() {
+    const grid = document.getElementById("p-grid");
+    const paint = () => {
+      document.querySelectorAll("#f-plat .fchip").forEach((b) => b.classList.toggle("on", b.dataset.v === projFilter.plat));
+      document.querySelectorAll("#f-diff .fchip").forEach((b) => b.classList.toggle("on", b.dataset.v === projFilter.diff));
+      const list = PROJECTS.filter((p) => (projFilter.plat === "all" || p.platform === projFilter.plat) && (projFilter.diff === "all" || p.difficulty === projFilter.diff));
+      document.getElementById("p-count").textContent = `${list.length} shown`;
+      grid.innerHTML = list.length ? list.map((p) => `
+        <a class="proj-card" href="#/projects/${p.id}">
+          <div><span class="plat ${p.platform}">${PLATFORMS[p.platform].short}</span></div>
+          <h3>${p.title}</h3>
+          <p>${p.learn.join(" · ")}</p>
+          <div class="p-meta"><span>${diffMeter(p.difficulty)}</span><span>${p.time}</span><span>${p.cost}</span></div>
+        </a>`).join("") : `<p class="muted">No projects match. Try another level.</p>`;
+    };
+    document.querySelectorAll("#f-plat .fchip").forEach((b) => b.addEventListener("click", () => { projFilter.plat = b.dataset.v; paint(); }));
+    document.querySelectorAll("#f-diff .fchip").forEach((b) => b.addEventListener("click", () => { projFilter.diff = b.dataset.v; paint(); }));
+    paint();
   }
 
   function project(p) {
+    const plat = PLATFORMS[p.platform];
+    const have = (state.parts && state.parts[p.id]) || [];
     return `
-<article class="lesson solo">
-  <a class="crumb" href="#/projects">← All projects</a>
-  <div class="m-hero"><div class="m-ico big">${p.icon}</div><div><h1>${p.title}</h1><div class="p-meta"><span class="diff ${p.difficulty.toLowerCase()}">${p.difficulty}</span><span>⏱ ${p.time}</span></div></div></div>
-  <h2>What you'll learn</h2><ul>${p.learn.map((x) => `<li>${x}</li>`).join("")}</ul>
-  <h2>Parts needed</h2><ul class="parts">${p.parts.map((x) => `<li>${x}</li>`).join("")}</ul>
-  <h2>Wiring</h2><p>${p.wiring}</p>
-  <h2>Code</h2>${H.code(p.code)}
-  ${H.key(`<p><b>Challenge:</b> ${p.challenge}</p>`)}
-  ${H.mistake(`<p>Double-check LED polarity, make sure all grounds are connected together, and open the Serial Monitor at the right baud rate when debugging.</p>`)}
-</article>`;
+<div class="proj-layout">
+  <article class="lesson">
+    <a class="crumb" href="#/projects">← All projects</a>
+    <div><span class="plat ${p.platform}">${plat.short}</span></div>
+    <h1>${p.title}</h1>
+    <h2>How it works</h2>
+    ${p.how}
+    <h2>You'll need</h2>
+    <p class="muted small">Tick parts off as you collect them.</p>
+    <ul class="parts-list">${p.parts.map((x, i) => `<li><label><input type="checkbox" data-part="${i}" ${have.includes(i) ? "checked" : ""}><span>${x}</span></label></li>`).join("")}</ul>
+    <h2>Build it</h2>
+    ${H.steps(p.steps)}
+    <h2>${p.code ? "Code" : "Code"}</h2>
+    ${p.code ? H.code(p.code, p.lang) : `<div class="no-code">No code needed. This circuit works with components alone, and that's the point: it shows what hardware can do before any software.</div>`}
+    <div class="challenge"><span class="eyebrow">Next-level challenge</span><p>${p.challenge}</p></div>
+    ${H.mistake(`<p>Double-check polarity (LEDs, electrolytic capacitors, diodes), connect all grounds together, and ${p.platform === "arduino" || p.platform === "analog" ? "power down before rewiring" : "remember these boards use 3.3 V logic — never feed 5 V into a GPIO pin"}.</p>`)}
+  </article>
+  <aside class="spec-card">
+    <h4>Project spec</h4>
+    <dl>
+      <div><dt>Platform</dt><dd>${plat.name}</dd></div>
+      <div><dt>Level</dt><dd>${diffMeter(p.difficulty)}</dd></div>
+      <div><dt>Build time</dt><dd>${p.time}</dd></div>
+      <div><dt>Parts cost</dt><dd>${p.cost}</dd></div>
+      <div><dt>Language</dt><dd>${p.code ? { cpp: "C++ (Arduino)", python: "Python", micropython: "MicroPython" }[p.lang] : "None"}</dd></div>
+    </dl>
+    <div class="learn"><span class="eyebrow">You'll learn</span><ul>${p.learn.map((x) => `<li>${x}</li>`).join("")}</ul></div>
+  </aside>
+</div>`;
+  }
+
+  function wireProject(p) {
+    document.querySelectorAll("[data-part]").forEach((cb) => cb.addEventListener("change", () => {
+      state.parts = state.parts || {};
+      state.parts[p.id] = [...document.querySelectorAll("[data-part]:checked")].map((x) => +x.dataset.part);
+      save();
+    }));
   }
 
   function glossary() {
@@ -298,7 +476,8 @@
     const ok = allPassed();
     return `
 <section class="page-head narrow">
-  <h1>🏆 Your certificate</h1>
+  <span class="eyebrow">Final output</span>
+  <h1>Your certificate</h1>
   <p>Pass all ${COURSE.length} module quizzes (80% or more) and your certificate of completion is generated automatically, with a unique ID anyone can verify.</p>
 </section>
 <div class="narrow">
@@ -312,9 +491,9 @@
     <p class="muted small center" id="cmsg"></p>
   </div>` : `
   <div class="locked">
-    <div class="big-emoji">🔒</div>
-    <h2>Almost there — finish these to unlock:</h2>
-    <ul class="unlock">${COURSE.map((m) => `<li class="${quizPassed(m) ? "done" : ""}"><span class="chk"></span><a href="#/quiz/${m.id}">${m.icon} ${m.title}</a>${state.quiz[m.id] ? ` <small>best ${state.quiz[m.id].best}/${m.quiz.length}</small>` : ""}</li>`).join("")}</ul>
+    <span class="eyebrow">Locked</span>
+    <h2>Pass these module quizzes to unlock it</h2>
+    <ul class="unlock">${COURSE.map((m) => `<li class="${quizPassed(m) ? "done" : ""}"><span class="chk"></span><a href="#/quiz/${m.id}">${des(m)} · ${m.title}</a>${state.quiz[m.id] ? ` <small>best ${state.quiz[m.id].best}/${m.quiz.length}</small>` : ""}</li>`).join("")}</ul>
     <a class="btn primary" href="${nextStop()}">Continue learning →</a>
   </div>`}
   <div class="verify">
@@ -337,10 +516,10 @@
     const date = completionDate();
     const id = certId(name, date);
     const g = ctx.createLinearGradient(0, 0, W, Hh);
-    g.addColorStop(0, "#0b1220"); g.addColorStop(1, "#122238");
+    g.addColorStop(0, "#07231a"); g.addColorStop(1, "#0d3326");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, Hh);
     // circuit traces
-    ctx.strokeStyle = "rgba(56,189,248,0.10)"; ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(63,208,191,0.10)"; ctx.lineWidth = 3;
     for (let i = 0; i < 26; i++) {
       const y = 60 + i * 40, x = (i * 137) % 500;
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(x + 80, y); ctx.lineTo(x + 120, y + 30); ctx.lineTo(x + 260, y + 30); ctx.stroke();
@@ -348,12 +527,12 @@
       ctx.beginPath(); ctx.moveTo(W, y); ctx.lineTo(W - x - 80, y); ctx.lineTo(W - x - 120, y - 30); ctx.lineTo(W - x - 220, y - 30); ctx.stroke();
     }
     // borders
-    ctx.strokeStyle = "#f5b83d"; ctx.lineWidth = 6; ctx.strokeRect(40, 40, W - 80, Hh - 80);
-    ctx.strokeStyle = "rgba(245,184,61,.45)"; ctx.lineWidth = 2; ctx.strokeRect(58, 58, W - 116, Hh - 116);
+    ctx.strokeStyle = "#f0a36b"; ctx.lineWidth = 6; ctx.strokeRect(40, 40, W - 80, Hh - 80);
+    ctx.strokeStyle = "rgba(240,163,107,.45)"; ctx.lineWidth = 2; ctx.strokeRect(58, 58, W - 116, Hh - 116);
     ctx.textAlign = "center";
-    ctx.fillStyle = "#38bdf8"; ctx.font = "600 34px 'Space Grotesk', system-ui, sans-serif";
-    ctx.fillText("⚡ OPENCIRCUIT ACADEMY", W / 2, 150);
-    ctx.fillStyle = "#f5b83d"; ctx.font = "700 76px Georgia, 'Times New Roman', serif";
+    ctx.fillStyle = "#3fd0bf"; ctx.font = "600 34px 'IBM Plex Mono', monospace";
+    ctx.fillText("OPENCIRCUIT ACADEMY", W / 2, 150);
+    ctx.fillStyle = "#f0a36b"; ctx.font = "700 76px Georgia, 'Times New Roman', serif";
     ctx.fillText("Certificate of Completion", W / 2, 260);
     ctx.fillStyle = "#cbd5e1"; ctx.font = "28px system-ui, sans-serif";
     ctx.fillText("This is to certify that", W / 2, 340);
@@ -361,17 +540,18 @@
     ctx.font = `700 ${size}px Georgia, serif`;
     while (ctx.measureText(name).width > W - 320 && size > 40) { size -= 4; ctx.font = `700 ${size}px Georgia, serif`; }
     ctx.fillStyle = "#ffffff"; ctx.fillText(name, W / 2, 445);
-    ctx.strokeStyle = "#f5b83d"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(W / 2 - 360, 475); ctx.lineTo(W / 2 + 360, 475); ctx.stroke();
+    ctx.strokeStyle = "#f0a36b"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(W / 2 - 360, 475); ctx.lineTo(W / 2 + 360, 475); ctx.stroke();
     ctx.fillStyle = "#cbd5e1"; ctx.font = "28px system-ui, sans-serif";
     ctx.fillText("has successfully completed all modules and assessments of", W / 2, 535);
     ctx.fillStyle = "#ffffff"; ctx.font = "600 38px system-ui, sans-serif";
     ctx.fillText("Foundations of Electronics, Embedded Systems & VLSI", W / 2, 590);
     ctx.fillStyle = "#94a3b8"; ctx.font = "22px system-ui, sans-serif";
     const titles = COURSE.map((m) => m.title.replace(/:.*/, ""));
-    ctx.fillText(titles.slice(0, 4).join("  •  "), W / 2, 660);
-    ctx.fillText(titles.slice(4).join("  •  "), W / 2, 695);
+    const half = Math.ceil(titles.length / 2);
+    ctx.fillText(titles.slice(0, half).join("  •  "), W / 2, 660);
+    ctx.fillText(titles.slice(half).join("  •  "), W / 2, 695);
     const avg = Math.round((COURSE.reduce((s, m) => s + state.quiz[m.id].best / m.quiz.length, 0) / COURSE.length) * 100);
-    ctx.fillStyle = "#38bdf8"; ctx.font = "600 26px system-ui, sans-serif";
+    ctx.fillStyle = "#3fd0bf"; ctx.font = "600 26px system-ui, sans-serif";
     ctx.fillText(`${COURSE.length} modules · ${totalLessons} lessons · Average assessment score ${avg}%`, W / 2, 760);
     // footer
     ctx.textAlign = "left"; ctx.fillStyle = "#cbd5e1"; ctx.font = "22px system-ui";
@@ -379,15 +559,15 @@
     ctx.fillStyle = "#fff"; ctx.font = "600 30px system-ui"; ctx.fillText(new Date(date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }), 140, 945);
     ctx.textAlign = "right"; ctx.fillStyle = "#cbd5e1"; ctx.font = "22px system-ui";
     ctx.fillText("Certificate ID", W - 140, 900);
-    ctx.fillStyle = "#fff"; ctx.font = "600 30px 'JetBrains Mono', monospace"; ctx.fillText(id, W - 140, 945);
+    ctx.fillStyle = "#fff"; ctx.font = "600 30px 'IBM Plex Mono', monospace"; ctx.fillText(id, W - 140, 945);
     // seal
     ctx.textAlign = "center";
     const sx = W / 2, sy = 915;
-    ctx.fillStyle = "#f5b83d"; ctx.beginPath();
+    ctx.fillStyle = "#f0a36b"; ctx.beginPath();
     for (let k = 0; k < 40; k++) { const r = k % 2 ? 78 : 90, a = (k / 40) * Math.PI * 2; ctx.lineTo(sx + r * Math.cos(a), sy + r * Math.sin(a)); }
     ctx.fill();
-    ctx.fillStyle = "#0b1220"; ctx.beginPath(); ctx.arc(sx, sy, 64, 0, 7); ctx.fill();
-    ctx.fillStyle = "#f5b83d"; ctx.font = "700 44px system-ui"; ctx.fillText("⚡", sx, sy + 4);
+    ctx.fillStyle = "#07231a"; ctx.beginPath(); ctx.arc(sx, sy, 64, 0, 7); ctx.fill();
+    ctx.fillStyle = "#f0a36b"; ctx.font = "700 44px system-ui"; ctx.fillText("⚡", sx, sy + 4);
     ctx.font = "700 16px system-ui"; ctx.fillText("VERIFIED", sx, sy + 34);
     ctx.fillStyle = "#64748b"; ctx.font = "18px system-ui";
     ctx.fillText("Verify this certificate on the OpenCircuit Academy certificate page using the name, date and ID above.", W / 2, Hh - 80);
@@ -443,7 +623,7 @@
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const box = document.createElement("div");
     box.className = "confetti";
-    const colors = ["#38bdf8", "#f5b83d", "#22c55e", "#a78bfa", "#f472b6"];
+    const colors = ["#3fd0bf", "#f0a36b", "#5bd07a", "#e8c96a", "#b15a1e"];
     for (let i = 0; i < 80; i++) {
       const s = document.createElement("i");
       s.style.left = Math.random() * 100 + "vw";
@@ -454,16 +634,6 @@
     }
     document.body.appendChild(box);
     setTimeout(() => box.remove(), 3800);
-  }
-
-  function circuitBg() {
-    let s = `<svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice">`;
-    const rnd = (() => { let x = 7; return () => (x = (x * 16807) % 2147483647) / 2147483647; })();
-    for (let i = 0; i < 28; i++) {
-      const x = rnd() * 1200, y = rnd() * 600, dx = 60 + rnd() * 160, dy = (rnd() - 0.5) * 120;
-      s += `<path class="trace" style="animation-delay:${(rnd() * 6).toFixed(2)}s" d="M${x} ${y} h${dx} l${Math.abs(dy) / 2} ${dy} h${dx / 2}"/><circle class="pad" cx="${x + dx * 1.5 + Math.abs(dy) / 2}" cy="${y + dy}" r="4"/>`;
-    }
-    return s + "</svg>";
   }
 
   /* ---------------- Router ---------------- */
@@ -477,16 +647,16 @@
     let html, after, title = "OpenCircuit Academy";
     const mod = (id) => COURSE.find((m) => m.id === id);
 
-    if (!parts.length) html = home();
+    if (!parts.length) { html = home(); after = startScope; }
     else if (parts[0] === "learn" && !parts[1]) { html = curriculum(); title = "Learning path"; }
     else if (parts[0] === "learn" && mod(parts[1]) && !parts[2]) { const m = mod(parts[1]); html = moduleOverview(m); title = m.title; }
     else if (parts[0] === "learn" && mod(parts[1])) {
       const m = mod(parts[1]), l = m.lessons.find((x) => x.id === parts[2]);
-      if (l) { html = lesson(m, l); title = l.title; } else html = notFound();
+      if (l) { html = lesson(m, l); title = l.title; after = wireToc; } else html = notFound();
     }
     else if (parts[0] === "quiz" && mod(parts[1])) { const m = mod(parts[1]); html = quiz(m); after = () => wireQuiz(m); title = "Quiz: " + m.title; }
-    else if (parts[0] === "projects" && !parts[1]) { html = projects(); title = "Projects"; }
-    else if (parts[0] === "projects") { const p = PROJECTS.find((x) => x.id === parts[1]); html = p ? project(p) : notFound(); if (p) title = p.title; }
+    else if (parts[0] === "projects" && !parts[1]) { html = projects(); title = "Projects"; after = wireProjects; }
+    else if (parts[0] === "projects") { const p = PROJECTS.find((x) => x.id === parts[1]); html = p ? project(p) : notFound(); if (p) { title = p.title; after = () => wireProject(p); } }
     else if (parts[0] === "glossary") {
       html = glossary(); title = "Glossary";
       after = () => document.getElementById("gsearch").addEventListener("input", (e) => {
